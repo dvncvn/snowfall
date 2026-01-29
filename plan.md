@@ -30,41 +30,41 @@ phases 1–5 constitute MVP:
 
 ## execution order
 
-### phase 1: foundation
+### phase 1: foundation ✓
 
 #### 1.1 project scaffolding
-- [ ] init git repo
-- [ ] `npm create vite@latest . -- --template vanilla-ts`
-- [ ] configure tsconfig (strict mode)
-- [ ] basic HTML structure (single canvas, sidebar container)
-- [ ] CSS reset, CSS variables for theming
-- [ ] Geist + Geist Mono font setup
+- [x] init git repo
+- [x] `npm create vite@latest . -- --template vanilla-ts`
+- [x] configure tsconfig (strict mode)
+- [x] basic HTML structure (single canvas, sidebar container)
+- [x] CSS reset, CSS variables for theming
+- [x] Geist + Geist Mono font setup
 
 #### 1.2 canvas setup
-- [ ] create canvas element, handle resize
-- [ ] basic requestAnimationFrame loop
-- [ ] delta-time tracking for frame-independent motion
+- [x] create canvas element, handle resize
+- [x] basic requestAnimationFrame loop
+- [x] delta-time tracking for frame-independent motion
 
 ---
 
-### phase 2: visual system
+### phase 2: visual system ✓
 
 #### 2.1 snowflake particle system
-- [ ] `Snowflake` class/interface:
+- [x] `Snowflake` class/interface:
   - position (x, y)
   - velocity (vx, vy)
   - size
   - opacity
   - lifespan / age
   - drift factor
-- [ ] particle pool (spawn, update, recycle)
-- [ ] density control (flakes per second)
+- [x] particle pool (spawn, update, recycle)
+- [x] density control (flakes per second)
 
 #### 2.2 organic motion
-- [ ] perlin/simplex noise for wind field
-- [ ] gentle horizontal drift
-- [ ] subtle size/opacity variation over lifetime
-- [ ] soft fade-in on spawn, fade-out on death
+- [x] perlin/simplex noise for wind field
+- [x] gentle horizontal drift
+- [x] subtle size/opacity variation over lifetime
+- [x] soft fade-in on spawn, fade-out on death
 
 ---
 
