@@ -6,9 +6,11 @@ import { initAudio, resumeAudio, isAudioReady } from './audio/engine'
 import { triggerNote, triggerTwinkle } from './audio/music'
 import { stopAllVoices } from './audio/voice'
 import { startDrones, stopDrones } from './audio/drone'
+import { initDrums } from './audio/drums'
+import { stopSequencer } from './sequencer'
 import { updateEvolution, setDensityCallback, resetEvolution, setWindUserOverride } from './evolution'
 import { renderFlakes, applyDither } from './renderer'
-import { initControls, toggleTheme } from './controls'
+import { initControls, toggleTheme, initSequencerControls } from './controls'
 import { renderScene } from './scene'
 
 // state
@@ -211,6 +213,7 @@ function startVisuals() {
 async function startAudio() {
   if (!audioInitialized) {
     await initAudio()
+    initDrums()  // Initialize drum bus after audio context
     audioInitialized = true
   }
   await resumeAudio()
@@ -233,6 +236,7 @@ function stop() {
   }
   stopAllVoices()
   stopDrones()
+  stopSequencer()
   updatePlayButton()
 }
 
@@ -266,6 +270,13 @@ function updatePlayButton() {
 
 function toggleSidebar() {
   sidebar.classList.toggle('hidden')
+}
+
+function toggleDrumSequencer() {
+  const sequencer = document.getElementById('drum-sequencer')
+  if (sequencer) {
+    sequencer.classList.toggle('hidden')
+  }
 }
 
 // event listeners
@@ -309,6 +320,9 @@ document.addEventListener('keydown', (e) => {
       reseed()
       break
     case 'd':
+      toggleDrumSequencer()
+      break
+    case 't':
       toggleTheme()
       break
   }
@@ -317,6 +331,7 @@ document.addEventListener('keydown', (e) => {
 // initial setup
 resize()
 initControls(snowflakes)
+initSequencerControls()
 
 // Ensure sidebar starts hidden
 sidebar.classList.add('hidden')

@@ -10,6 +10,12 @@ import { setWavetablePosition } from './audio/voice'
 import { setScene, type SceneType } from './scene'
 import { setDroneEnabled } from './audio/drone'
 import { setDitherSize } from './renderer'
+import { 
+  toggleStep, getPattern, clearPattern, setTempo, setSwing, 
+  toggleSequencer, setStepCallback, setPatternCallback, 
+  applyFill, setEvolveMode, getEvolveMode, setStutter
+} from './sequencer'
+import { setDrumVolume } from './audio/drums'
 
 // Theme management
 let currentTheme: 'dark' | 'light' = 'dark'
@@ -221,4 +227,183 @@ function updateThemeIcon(): void {
  */
 export function getTheme(): 'dark' | 'light' {
   return currentTheme
+}
+
+// ========================================
+// Drum Sequencer Controls
+// ========================================
+
+const STEPS = 16
+
+/**
+ * Initialize drum sequencer UI and controls
+ */
+export function initSequencerControls(): void {
+  // Create step buttons for each track
+  const tracks = document.querySelectorAll('.seq-track')
+  tracks.forEach((track) => {
+    const trackIndex = parseInt(track.getAttribute('data-track') || '0', 10)
+    const stepsContainer = track.querySelector('.seq-steps')
+    if (!stepsContainer) return
+
+    for (let step = 0; step < STEPS; step++) {
+      const btn = document.createElement('button')
+      btn.className = 'seq-step'
+      btn.setAttribute('data-track', String(trackIndex))
+      btn.setAttribute('data-step', String(step))
+      
+      btn.addEventListener('click', () => {
+        const isActive = toggleStep(trackIndex, step)
+        btn.classList.toggle('active', isActive)
+      })
+      
+      stepsContainer.appendChild(btn)
+    }
+  })
+
+  // Play button
+  const playBtn = document.getElementById('seq-play') as HTMLButtonElement
+  playBtn.addEventListener('click', () => {
+    const playing = toggleSequencer()
+    playBtn.classList.toggle('playing', playing)
+    playBtn.textContent = playing ? 'stop' : 'play'
+  })
+
+  // Volume slider
+  const volumeSlider = document.getElementById('seq-volume') as HTMLInputElement
+  volumeSlider.addEventListener('input', () => {
+    const value = parseInt(volumeSlider.value, 10) / 100
+    setDrumVolume(value)
+  })
+
+  // Tempo slider
+  const tempoSlider = document.getElementById('seq-tempo') as HTMLInputElement
+  const tempoValue = document.getElementById('seq-tempo-value') as HTMLSpanElement
+  tempoSlider.addEventListener('input', () => {
+    const bpm = parseInt(tempoSlider.value, 10)
+    setTempo(bpm)
+    tempoValue.textContent = String(bpm)
+  })
+
+  // Swing slider
+  const swingSlider = document.getElementById('seq-swing') as HTMLInputElement
+  swingSlider.addEventListener('input', () => {
+    const value = parseInt(swingSlider.value, 10) / 100
+    setSwing(value)
+  })
+
+  // Stutter X/Y pad
+  const stutterPad = document.getElementById('seq-stutter-pad') as HTMLDivElement
+  const stutterDot = document.getElementById('seq-stutter-dot') as HTMLDivElement
+  let isDraggingStutter = false
+
+  const updateStutter = (e: MouseEvent | Touch) => {
+    const rect = stutterPad.getBoundingClientRect()
+    const x = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width))
+    const y = Math.max(0, Math.min(1, 1 - (e.clientY - rect.top) / rect.height))
+    
+    // Update dot position
+    stutterDot.style.left = `${x * 100}%`
+    stutterDot.style.top = `${(1 - y) * 100}%`
+    
+    // Update stutter params
+    setStutter(x, y)
+  }
+
+  stutterPad.addEventListener('mousedown', (e) => {
+    isDraggingStutter = true
+    stutterPad.classList.add('active')
+    updateStutter(e)
+  })
+
+  document.addEventListener('mousemove', (e) => {
+    if (isDraggingStutter) {
+      updateStutter(e)
+    }
+  })
+
+  document.addEventListener('mouseup', () => {
+    if (isDraggingStutter) {
+      isDraggingStutter = false
+      stutterPad.classList.remove('active')
+    }
+  })
+
+  // Touch support
+  stutterPad.addEventListener('touchstart', (e) => {
+    isDraggingStutter = true
+    stutterPad.classList.add('active')
+    if (e.touches[0]) updateStutter(e.touches[0])
+    e.preventDefault()
+  })
+
+  stutterPad.addEventListener('touchmove', (e) => {
+    if (isDraggingStutter && e.touches[0]) {
+      updateStutter(e.touches[0])
+      e.preventDefault()
+    }
+  })
+
+  stutterPad.addEventListener('touchend', () => {
+    isDraggingStutter = false
+    stutterPad.classList.remove('active')
+  })
+
+  // Evolve button (toggle)
+  const evolveBtn = document.getElementById('seq-evolve') as HTMLButtonElement
+  evolveBtn.addEventListener('click', () => {
+    const newState = !getEvolveMode()
+    setEvolveMode(newState)
+    evolveBtn.classList.toggle('playing', newState)
+  })
+
+  // Fill button
+  const fillBtn = document.getElementById('seq-fill') as HTMLButtonElement
+  fillBtn.addEventListener('click', () => {
+    applyFill()
+    updateSequencerUI()
+  })
+
+  // Clear button
+  const clearBtn = document.getElementById('seq-clear') as HTMLButtonElement
+  clearBtn.addEventListener('click', () => {
+    clearPattern()
+    updateSequencerUI()
+  })
+
+  // Set up playhead callback
+  setStepCallback((step) => {
+    updatePlayhead(step)
+  })
+
+  // Set up pattern change callback (for evolve mode)
+  setPatternCallback(() => {
+    updateSequencerUI()
+  })
+}
+
+/**
+ * Update all step button states from pattern
+ */
+function updateSequencerUI(): void {
+  const pattern = getPattern()
+  const stepBtns = document.querySelectorAll('.seq-step')
+  
+  stepBtns.forEach((btn) => {
+    const track = parseInt(btn.getAttribute('data-track') || '0', 10)
+    const step = parseInt(btn.getAttribute('data-step') || '0', 10)
+    btn.classList.toggle('active', pattern[track]?.[step] ?? false)
+  })
+}
+
+/**
+ * Update playhead position
+ */
+function updatePlayhead(currentStep: number): void {
+  const stepBtns = document.querySelectorAll('.seq-step')
+  
+  stepBtns.forEach((btn) => {
+    const step = parseInt(btn.getAttribute('data-step') || '0', 10)
+    btn.classList.toggle('playing', step === currentStep)
+  })
 }

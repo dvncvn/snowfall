@@ -18,8 +18,9 @@
         <div class="intro-controls">
           <div><span>space</span> play/pause</div>
           <div><span>h</span> sidebar</div>
+          <div><span>d</span> drums</div>
+          <div><span>t</span> theme</div>
           <div><span>r</span> reseed</div>
-          <div><span>d</span> theme</div>
         </div>
       </div>
     </div>
@@ -181,9 +182,61 @@
       </div>
       
       <div class="sidebar-footer">
-        <span class="hint">h hide · r reseed</span>
+        <span class="hint">h hide · d drums · t theme</span>
       </div>
     </aside>
+
+    <div id="drum-sequencer" class="drum-sequencer">
+      <div class="seq-grid">
+        <div class="seq-track" data-track="0">
+          <span class="seq-label">k</span>
+          <div class="seq-steps"></div>
+        </div>
+        <div class="seq-track" data-track="1">
+          <span class="seq-label">s</span>
+          <div class="seq-steps"></div>
+        </div>
+        <div class="seq-track" data-track="2">
+          <span class="seq-label">hc</span>
+          <div class="seq-steps"></div>
+        </div>
+        <div class="seq-track" data-track="3">
+          <span class="seq-label">ho</span>
+          <div class="seq-steps"></div>
+        </div>
+        <div class="seq-track" data-track="4">
+          <span class="seq-label">p</span>
+          <div class="seq-steps"></div>
+        </div>
+        <div class="seq-track" data-track="5">
+          <span class="seq-label">a</span>
+          <div class="seq-steps"></div>
+        </div>
+      </div>
+      <div class="seq-controls">
+        <button id="seq-play" class="seq-btn">play</button>
+        <div class="seq-slider-group">
+          <label>vol</label>
+          <input type="range" id="seq-volume" min="0" max="100" value="70" />
+        </div>
+        <div class="seq-slider-group">
+          <label>bpm</label>
+          <input type="range" id="seq-tempo" min="40" max="200" value="120" />
+          <span id="seq-tempo-value">120</span>
+        </div>
+        <div class="seq-slider-group">
+          <label>swing</label>
+          <input type="range" id="seq-swing" min="0" max="100" value="0" />
+        </div>
+        <div class="seq-xy-pad" id="seq-stutter-pad">
+          <div class="seq-xy-dot" id="seq-stutter-dot"></div>
+          <span class="seq-xy-label">stutter</span>
+        </div>
+        <button id="seq-evolve" class="seq-btn">evolve</button>
+        <button id="seq-fill" class="seq-btn">fill</button>
+        <button id="seq-clear" class="seq-btn">clear</button>
+      </div>
+    </div>
 
     <div class="player-controls">
       <input type="range" id="master-volume" class="volume-slider" min="0" max="100" value="70" aria-label="Volume" />

@@ -426,3 +426,197 @@ select:focus {
   clip: rect(0, 0, 0, 0);
   border: 0;
 }
+
+/* ========================================
+   Drum Sequencer
+   ======================================== */
+
+.drum-sequencer {
+  position: fixed;
+  bottom: 12px;
+  left: 12px;
+  z-index: 15;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  pointer-events: none;
+}
+
+.drum-sequencer > * {
+  pointer-events: auto;
+}
+
+.drum-sequencer.hidden {
+  display: none;
+}
+
+.seq-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.seq-track {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.seq-label {
+  width: 14px;
+  font-family: var(--font-mono);
+  font-size: 8px;
+  color: var(--fg-muted);
+  text-align: right;
+  opacity: 0.6;
+}
+
+.seq-steps {
+  display: flex;
+  gap: 1px;
+}
+
+.seq-step {
+  width: 14px;
+  height: 14px;
+  background: transparent;
+  border: 1px solid var(--border);
+  cursor: pointer;
+  transition: none;
+  opacity: 0.4;
+}
+
+.seq-step:hover {
+  opacity: 0.7;
+  background: var(--fg-muted);
+}
+
+.seq-step.active {
+  background: var(--fg);
+  opacity: 0.9;
+}
+
+.seq-step.playing {
+  border-color: var(--fg);
+  opacity: 1;
+}
+
+/* Beat grouping - highlight every 4th step boundary */
+.seq-step:nth-child(4n+1) {
+  margin-left: 3px;
+}
+.seq-step:nth-child(1) {
+  margin-left: 0;
+}
+
+.seq-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-top: 4px;
+}
+
+.seq-btn {
+  font-family: var(--font-mono);
+  font-size: 8px;
+  padding: 3px 6px;
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--fg);
+  cursor: pointer;
+  opacity: 0.6;
+}
+
+.seq-btn:hover {
+  opacity: 1;
+}
+
+.seq-btn:active {
+  opacity: 1;
+}
+
+.seq-btn.playing {
+  background: var(--fg);
+  color: var(--bg);
+  opacity: 1;
+}
+
+.seq-slider-group {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.seq-slider-group label {
+  font-family: var(--font-mono);
+  font-size: 8px;
+  color: var(--fg-muted);
+  opacity: 0.6;
+}
+
+.seq-slider-group input[type="range"] {
+  width: 50px;
+  opacity: 0.6;
+}
+
+.seq-slider-group input[type="range"]:hover {
+  opacity: 1;
+}
+
+.seq-slider-group span {
+  font-family: var(--font-mono);
+  font-size: 8px;
+  color: var(--fg-muted);
+  width: 20px;
+  opacity: 0.6;
+}
+
+/* X/Y Pad for stutter control */
+.seq-xy-pad {
+  width: 40px;
+  height: 40px;
+  border: 1px solid var(--border);
+  position: relative;
+  cursor: crosshair;
+  opacity: 0.5;
+  background: 
+    linear-gradient(var(--border) 1px, transparent 1px),
+    linear-gradient(90deg, var(--border) 1px, transparent 1px);
+  background-size: 10px 10px;
+  background-position: -1px -1px;
+}
+
+.seq-xy-pad:hover {
+  opacity: 0.8;
+}
+
+.seq-xy-pad.active {
+  opacity: 1;
+  border-color: var(--fg);
+}
+
+.seq-xy-dot {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  background: var(--fg);
+  transform: translate(-50%, -50%);
+  left: 0;
+  top: 100%;
+  pointer-events: none;
+}
+
+.seq-xy-label {
+  position: absolute;
+  bottom: -12px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: var(--font-mono);
+  font-size: 7px;
+  color: var(--fg-muted);
+  white-space: nowrap;
+  opacity: 0.6;
+}
+
+/* Player controls stay in corner - sequencer is now minimal overlay */
