@@ -32,17 +32,17 @@ let it run
     ▪ size       how large  
     ▪ wind       how far
     ▪ mood       what scale
-    ▪ delay      what echoes
+    ▪ dither     what texture
 ```
 
 ---
 
 ```
     space     play / pause
-    h         hide
+    h         hide sidebar
+    d         drums
+    t         theme
     r         reseed
-    p         pixel
-    d         dark / light
 ```
 
 ---
@@ -54,6 +54,21 @@ not every flake is heard
 motion → sound  
 density → harmony  
 time → evolution
+
+---
+
+**drums**
+
+```
+    ▪ 16 steps × 6 voices
+    ▪ euclidean / random / glitch fills
+    ▪ evolve mode — pattern mutates each loop
+    ▪ stutter pad — rate × chance
+    ▪ tone pad — filter × decay
+```
+
+idm-friendly  
+click and drag
 
 ---
 
