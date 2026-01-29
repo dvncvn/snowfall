@@ -3,7 +3,7 @@ import { SnowflakeSystem, Snowflake } from './snowflake'
 import { updateWind, resetWind } from './wind'
 import { reseedNoise, prefersReducedMotion } from './utils'
 import { initAudio, resumeAudio, isAudioReady } from './audio/engine'
-import { triggerNote } from './audio/music'
+import { triggerNote, triggerTwinkle } from './audio/music'
 import { stopAllVoices } from './audio/voice'
 import { startDrones, stopDrones } from './audio/drone'
 import { updateEvolution, setDensityCallback, resetEvolution, setWindUserOverride } from './evolution'
@@ -173,6 +173,15 @@ function toggleSidebar() {
 
 // event listeners
 startBtn.addEventListener('click', toggle)
+
+// Canvas click for twinkle sounds
+canvas.addEventListener('click', (e) => {
+  if (!isPlaying || !isAudioReady()) return
+  
+  const x = e.clientX / window.innerWidth
+  const y = e.clientY / window.innerHeight
+  triggerTwinkle(x, y)
+})
 
 window.addEventListener('resize', resize)
 

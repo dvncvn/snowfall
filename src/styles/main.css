@@ -381,29 +381,30 @@ select:focus {
 }
 
 .intro-controls {
-  font-size: 11px;
+  font-size: 10px;
   color: var(--fg-muted);
   font-family: var(--font-mono);
   display: flex;
-  flex-direction: column;
-  gap: 8px;
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 16px;
 }
 
 .intro-controls div {
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 12px;
+  gap: 6px;
 }
 
 .intro-controls span {
   display: inline-block;
-  min-width: 56px;
-  padding: 4px 8px;
+  padding: 2px 6px;
   background: var(--surface);
   border: 1px solid var(--border);
   color: var(--fg);
   text-align: center;
+  font-size: 9px;
 }
 
 @keyframes intro-fade-in {

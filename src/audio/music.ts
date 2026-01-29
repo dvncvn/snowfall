@@ -141,3 +141,38 @@ export function randomizeScale(): void {
   const newScale = scales[Math.floor(Math.random() * scales.length)]!
   config.scale = newScale
 }
+
+/**
+ * Trigger twinkly sounds from a click event
+ * Creates a rapid cluster of high, bright notes
+ */
+export function triggerTwinkle(x: number, _y: number): void {
+  const scale = SCALES[config.scale]
+  const pan = (x - 0.5) * 1.6
+  
+  // Play 3-5 rapid notes
+  const noteCount = 3 + Math.floor(Math.random() * 3)
+  
+  for (let i = 0; i < noteCount; i++) {
+    // High octaves (2-4 above root)
+    const octave = 2 + Math.floor(Math.random() * 3)
+    const scaleIndex = Math.floor(Math.random() * scale.length)
+    const interval = scale[scaleIndex]!
+    const midiNote = config.rootNote + octave * 12 + interval
+    
+    // Stagger the notes slightly
+    const delay = i * (30 + Math.random() * 40)
+    
+    setTimeout(() => {
+      playNote({
+        frequency: midiToFreq(midiNote),
+        velocity: 0.4 + Math.random() * 0.3,
+        attack: 0.005 + Math.random() * 0.01,  // very fast attack
+        release: 0.8 + Math.random() * 1.2,     // short-medium release
+        filterFreq: 3000 + Math.random() * 4000, // bright
+        pan: pan + (Math.random() - 0.5) * 0.4,  // slight spread
+        reverbSend: config.reverbAmount * 1.2    // extra reverb for shimmer
+      })
+    }, delay)
+  }
+}

@@ -89,11 +89,11 @@ export async function initAudio(): Promise<void> {
   // LFO for warble
   warbleLFO = audioContext.createOscillator()
   warbleLFO.type = 'sine'
-  warbleLFO.frequency.value = 0.5  // Slow wobble rate (Hz)
+  warbleLFO.frequency.value = 0.49  // Very slow wobble rate (Hz)
   
   // Depth control - scales LFO output
   warbleDepth = audioContext.createGain()
-  warbleDepth.gain.value = 0.002  // Small depth for subtle pitch variation
+  warbleDepth.gain.value = 0.0008  // Very subtle depth
   
   // Connect LFO to delay time
   warbleLFO.connect(warbleDepth)
@@ -102,10 +102,10 @@ export async function initAudio(): Promise<void> {
   
   // Mix controls
   warbleMix = audioContext.createGain()
-  warbleMix.gain.value = 0.5  // Default 50% wet
+  warbleMix.gain.value = 0.2  // Default 20% wet
   
   warbleDry = audioContext.createGain()
-  warbleDry.gain.value = 0.5  // Default 50% dry
+  warbleDry.gain.value = 0.8  // Default 80% dry
   
   // Route dry signal through warble effect
   // dryGain -> warbleDelay -> warbleMix -> masterGain
