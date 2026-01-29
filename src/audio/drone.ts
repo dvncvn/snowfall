@@ -18,8 +18,8 @@ let droneInterval: number | null = null
 let droneEnabled = true
 
 // Drone config
-const DRONE_INTERVAL_MIN = 5000   // 5 seconds minimum between drones
-const DRONE_INTERVAL_MAX = 12000  // 12 seconds maximum
+const DRONE_INTERVAL_MIN = 3000   // 3 seconds minimum between drones
+const DRONE_INTERVAL_MAX = 8000   // 8 seconds maximum
 const DRONE_DURATION = 6000       // 6 second sustain
 const DRONE_ATTACK = 2.0          // 2 second fade in
 const DRONE_RELEASE = 3.0         // 3 second fade out

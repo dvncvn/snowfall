@@ -119,7 +119,7 @@ export async function initAudio(): Promise<void> {
 
   // Noise/crackle effect
   noiseGain = audioContext.createGain()
-  noiseGain.gain.value = 0.015  // Subtle by default
+  noiseGain.gain.value = 0.0025  // Very subtle by default
   
   // Filter to shape noise (vinyl-like hiss)
   noiseFilter = audioContext.createBiquadFilter()
@@ -419,8 +419,8 @@ function startCrackleGenerator(): void {
  */
 export function setNoiseLevel(level: number): void {
   if (noiseGain && audioContext) {
-    // Map to 0-0.06 for subtle to noticeable hiss
-    noiseGain.gain.setTargetAtTime(level * 0.06, audioContext.currentTime, 0.1)
+    // Map to 0-0.025 for very subtle hiss
+    noiseGain.gain.setTargetAtTime(level * 0.025, audioContext.currentTime, 0.1)
   }
 }
 
