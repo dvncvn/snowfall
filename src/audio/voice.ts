@@ -2,7 +2,7 @@
  * Synth voice with oscillator, filter, and envelope
  */
 
-import { getAudioContext, getDryNode, getReverbNode, getDelayNode, getSynthGain } from './engine'
+import { getAudioContext, getDelayNode, getSynthGain } from './engine'
 
 export interface VoiceParams {
   frequency: number
@@ -117,12 +117,10 @@ function getWavetableBlend(): [OscillatorType, OscillatorType, number] {
  */
 export function playNote(params: Partial<VoiceParams> = {}): void {
   const ctx = getAudioContext()
-  const dryNode = getDryNode()
-  const reverbNode = getReverbNode()
   const delayNode = getDelayNode()
   const synthGain = getSynthGain()
   
-  if (!ctx || !dryNode || !reverbNode || !synthGain) return
+  if (!ctx || !synthGain) return
 
   const p = { ...defaultParams, ...params }
   const now = ctx.currentTime
@@ -193,27 +191,18 @@ export function playNote(params: Partial<VoiceParams> = {}): void {
   filter.connect(gain)
   gain.connect(panner)
   
-  // Route through synth gain for volume control, then split to dry, reverb, and delay
-  panner.connect(synthGain)
-  
-  const dryAmount = 1 - p.reverbSend * 0.5
-  const wetAmount = p.reverbSend
-  
-  const drySend = ctx.createGain()
-  drySend.gain.value = dryAmount
-  synthGain.connect(drySend)
-  drySend.connect(dryNode)
-  
-  const wetSend = ctx.createGain()
-  wetSend.gain.value = wetAmount
-  synthGain.connect(wetSend)
-  wetSend.connect(reverbNode)
+  // Route through synth gain for volume control
+  // SynthGain already has fixed connections to dry/reverb sends in engine.ts
+  const voiceOutput = ctx.createGain()
+  voiceOutput.gain.value = 1 - p.reverbSend * 0.3  // Slight reduction for high reverb
+  panner.connect(voiceOutput)
+  voiceOutput.connect(synthGain)
 
-  // Send to delay (uses same send amount as reverb)
-  if (delayNode) {
+  // Optional delay send (separate from main routing)
+  if (delayNode && p.reverbSend > 0.3) {
     const delaySend = ctx.createGain()
-    delaySend.gain.value = wetAmount * 0.7
-    synthGain.connect(delaySend)
+    delaySend.gain.value = p.reverbSend * 0.15
+    panner.connect(delaySend)
     delaySend.connect(delayNode)
   }
 

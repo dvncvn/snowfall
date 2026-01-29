@@ -351,17 +351,23 @@ requestAnimationFrame(() => {
   ctx.fillRect(0, 0, canvas.width, canvas.height)
 })
 
-// Intro sequence - requires user gesture to start (ensures audio works)
-function skipIntro() {
+// Intro sequence
+let userGestured = false
+
+function skipIntro(fromUserGesture = false) {
+  if (fromUserGesture) userGestured = true
   if (introComplete) return
   introComplete = true
   
   intro.classList.add('fade-out')
   
-  // Start visuals and audio after fade begins
+  // Start visuals immediately
   setTimeout(() => {
     startVisuals()
-    startAudio()
+    // Only start audio if user has gestured (browser requirement)
+    if (userGestured) {
+      startAudio()
+    }
     updatePlayButton()
   }, 500)
   
@@ -371,11 +377,33 @@ function skipIntro() {
   }, 1500)
 }
 
-// Click or key to start (user gesture ensures audio works)
-intro.addEventListener('click', skipIntro)
+// Auto-advance intro after delay (visuals only, audio needs gesture)
+setTimeout(() => {
+  if (!introComplete) {
+    skipIntro(false)
+  }
+}, 4000)
+
+// Click or key to start with audio
+intro.addEventListener('click', () => skipIntro(true))
 document.addEventListener('keydown', (e) => {
   if (!introComplete && (e.key === ' ' || e.key === 'Enter')) {
     e.preventDefault()
-    skipIntro()
+    skipIntro(true)
   }
 })
+
+// Enable audio on any user interaction after intro
+document.addEventListener('click', () => {
+  if (introComplete && !userGestured) {
+    userGestured = true
+    startAudio()
+  }
+}, { once: true })
+
+document.addEventListener('keydown', () => {
+  if (introComplete && !userGestured) {
+    userGestured = true
+    startAudio()
+  }
+}, { once: true })

@@ -74,6 +74,7 @@ body {
   flex-direction: column;
   transform: translateX(0);
   transition: transform var(--transition-normal);
+  user-select: none;
 }
 
 .sidebar.hidden {
@@ -449,6 +450,7 @@ select:focus {
   align-items: stretch;
   pointer-events: none;
   transition: left var(--transition-normal);
+  user-select: none;
 }
 
 .drum-sequencer > * {
@@ -529,11 +531,17 @@ select:focus {
   font-family: var(--font-mono);
   font-size: 8px;
   padding: 3px 6px;
+  text-align: center;
   background: transparent;
   border: 1px solid var(--border);
   color: var(--fg);
   cursor: pointer;
   opacity: 0.6;
+}
+
+#seq-play {
+  width: 32px;
+  padding: 3px 0;
 }
 
 .seq-btn:hover {
@@ -560,12 +568,12 @@ select:focus {
   font-family: var(--font-mono);
   font-size: 8px;
   color: var(--fg-muted);
-  opacity: 0.6;
+  opacity: 0.7;
 }
 
 .seq-slider-group input[type="range"] {
   width: 50px;
-  opacity: 0.6;
+  opacity: 0.7;
 }
 
 .seq-slider-group input[type="range"]:hover {
@@ -577,7 +585,7 @@ select:focus {
   font-size: 8px;
   color: var(--fg-muted);
   width: 20px;
-  opacity: 0.6;
+  opacity: 0.7;
 }
 
 /* Sequencer main layout */

@@ -24,17 +24,17 @@ export function initDrums(): void {
   if (!ctx || drumBus) return
 
   drumBus = ctx.createGain()
-  drumBus.gain.value = 0.7
+  drumBus.gain.value = 0.5
 
   // Create sends to main effects
   drumDrySend = ctx.createGain()
-  drumDrySend.gain.value = 0.8
+  drumDrySend.gain.value = 0.6
   
   drumReverbSend = ctx.createGain()
-  drumReverbSend.gain.value = 0.25
+  drumReverbSend.gain.value = 0.2
   
   drumDelaySend = ctx.createGain()
-  drumDelaySend.gain.value = 0.15
+  drumDelaySend.gain.value = 0.1
 
   // Connect drum bus to sends
   const dryNode = getDryNode()
@@ -79,15 +79,15 @@ export function getDrumTone(): { filter: number; decay: number } {
 
 // Helper to apply tone to decay times
 function applyDecay(baseDecay: number): number {
-  // Scale decay: 0.3x to 2x based on toneDecay
-  const multiplier = 0.3 + toneDecay * 1.7
+  // Scale decay: 0.15x to 3x based on toneDecay (more dramatic range)
+  const multiplier = 0.15 + toneDecay * 2.85
   return baseDecay * multiplier
 }
 
 // Helper to apply tone to filter frequencies
 function applyFilter(baseFreq: number): number {
-  // Scale frequency: 0.3x to 2x based on toneFilter
-  const multiplier = 0.3 + toneFilter * 1.7
+  // Scale frequency: 0.2x to 3x based on toneFilter (more dramatic range)
+  const multiplier = 0.2 + toneFilter * 2.8
   return baseFreq * multiplier
 }
 
@@ -159,7 +159,7 @@ function triggerKick(ctx: AudioContext, time: number, velocity: number): void {
   const noiseFilter = ctx.createBiquadFilter()
   noiseFilter.type = 'bandpass'
   noiseFilter.frequency.value = applyFilter(300)
-  noiseFilter.Q.value = 2
+  noiseFilter.Q.value = 6
 
   const noiseGain = ctx.createGain()
   noiseGain.gain.setValueAtTime(0.6 * velocity, time)
@@ -200,12 +200,12 @@ function triggerSnare(ctx: AudioContext, time: number, velocity: number): void {
   const noiseFilter = ctx.createBiquadFilter()
   noiseFilter.type = 'highpass'
   noiseFilter.frequency.value = applyFilter(2000)
-  noiseFilter.Q.value = 0.8
+  noiseFilter.Q.value = 4
 
   const noiseFilter2 = ctx.createBiquadFilter()
   noiseFilter2.type = 'peaking'
   noiseFilter2.frequency.value = applyFilter(5000)
-  noiseFilter2.Q.value = 3
+  noiseFilter2.Q.value = 8
   noiseFilter2.gain.value = 6
 
   const noiseGain = ctx.createGain()
@@ -264,7 +264,7 @@ function triggerHihatClosed(ctx: AudioContext, time: number, velocity: number): 
     const filter = ctx.createBiquadFilter()
     filter.type = 'bandpass'
     filter.frequency.value = freq
-    filter.Q.value = 15
+    filter.Q.value = 20
     
     osc.connect(filter)
     filter.connect(oscGain)
@@ -314,7 +314,7 @@ function triggerHihatOpen(ctx: AudioContext, time: number, velocity: number): vo
     const filter = ctx.createBiquadFilter()
     filter.type = 'bandpass'
     filter.frequency.value = freq
-    filter.Q.value = 12
+    filter.Q.value = 18
     
     osc.connect(filter)
     filter.connect(oscGain)
@@ -404,7 +404,7 @@ function triggerAccent(ctx: AudioContext, time: number, velocity: number): void 
     filter.type = 'bandpass'
     filter.frequency.setValueAtTime(startFreq, time)
     filter.frequency.exponentialRampToValueAtTime(200, time + 0.015)
-    filter.Q.value = 15
+    filter.Q.value = 25
     
     const gain = ctx.createGain()
     gain.gain.setValueAtTime(0.3 * velocity, time)
@@ -426,7 +426,7 @@ function triggerAccent(ctx: AudioContext, time: number, velocity: number): void 
     const filter = ctx.createBiquadFilter()
     filter.type = 'bandpass'
     filter.frequency.value = 1500 + Math.random() * 3000
-    filter.Q.value = 12
+    filter.Q.value = 20
     
     const distortion = ctx.createWaveShaper()
     distortion.curve = makeDistortionCurve(50)

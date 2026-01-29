@@ -44,10 +44,6 @@ export async function initAudio(): Promise<void> {
   masterGain.gain.value = 0.5
   masterGain.connect(audioContext.destination)
 
-  // Synth gain (controls snowfall synth volume, separate from drums)
-  synthGain = audioContext.createGain()
-  synthGain.gain.value = 0.7
-
   // Dry path (will be routed through warble later)
   dryGain = audioContext.createGain()
   dryGain.gain.value = 0.4
@@ -55,6 +51,22 @@ export async function initAudio(): Promise<void> {
   // Reverb path
   reverbGain = audioContext.createGain()
   reverbGain.gain.value = 0.4
+
+  // Synth gain (controls snowfall synth volume, separate from drums)
+  // Connects to dry and reverb sends
+  synthGain = audioContext.createGain()
+  synthGain.gain.value = 0.5
+  
+  // Create synth sends (connected once, not per-voice)
+  const synthDrySend = audioContext.createGain()
+  synthDrySend.gain.value = 0.6
+  const synthReverbSend = audioContext.createGain()
+  synthReverbSend.gain.value = 0.4
+  
+  synthGain.connect(synthDrySend)
+  synthGain.connect(synthReverbSend)
+  synthDrySend.connect(dryGain)
+  synthReverbSend.connect(reverbGain)
   
   // Create impulse response for reverb (longer, slower decay)
   reverbNode = audioContext.createConvolver()
@@ -122,17 +134,51 @@ export async function initAudio(): Promise<void> {
   dryGain.connect(warbleDry)
   warbleDry.connect(masterGain)
 
-  // Noise/crackle effect
+  // Noise/crackle effect - wind-like with modulated filter
   noiseGain = audioContext.createGain()
-  noiseGain.gain.value = 0.0025  // Very subtle by default
+  noiseGain.gain.value = 0.006  // Default hiss level (75%)
   
-  // Filter to shape noise (vinyl-like hiss)
+  // Bandpass filter for wind character
   noiseFilter = audioContext.createBiquadFilter()
-  noiseFilter.type = 'highpass'
-  noiseFilter.frequency.value = 1000
-  noiseFilter.Q.value = 0.5
+  noiseFilter.type = 'bandpass'
+  noiseFilter.frequency.value = 800
+  noiseFilter.Q.value = 1.5
   
-  noiseFilter.connect(noiseGain)
+  // Second filter for additional shaping
+  const noiseFilter2 = audioContext.createBiquadFilter()
+  noiseFilter2.type = 'lowpass'
+  noiseFilter2.frequency.value = 2000
+  noiseFilter2.Q.value = 2
+  
+  // LFO to modulate filter (wind gusts)
+  const windLFO = audioContext.createOscillator()
+  windLFO.type = 'sine'
+  windLFO.frequency.value = 0.08  // Very slow modulation
+  
+  const windLFO2 = audioContext.createOscillator()
+  windLFO2.type = 'sine'
+  windLFO2.frequency.value = 0.23  // Slightly faster layer
+  
+  // LFO depth controls
+  const windDepth = audioContext.createGain()
+  windDepth.gain.value = 600  // Modulation range
+  
+  const windDepth2 = audioContext.createGain()
+  windDepth2.gain.value = 300
+  
+  // Connect LFOs to filter frequency
+  windLFO.connect(windDepth)
+  windDepth.connect(noiseFilter.frequency)
+  
+  windLFO2.connect(windDepth2)
+  windDepth2.connect(noiseFilter2.frequency)
+  
+  windLFO.start()
+  windLFO2.start()
+  
+  // Connect noise chain
+  noiseFilter.connect(noiseFilter2)
+  noiseFilter2.connect(noiseGain)
   noiseGain.connect(masterGain)
   
   // Create and start noise
@@ -440,8 +486,8 @@ function startCrackleGenerator(): void {
  */
 export function setNoiseLevel(level: number): void {
   if (noiseGain && audioContext) {
-    // Map to 0-0.025 for very subtle hiss
-    noiseGain.gain.setTargetAtTime(level * 0.025, audioContext.currentTime, 0.1)
+    // Map to 0-0.008 (subtle hiss, max not loud)
+    noiseGain.gain.setTargetAtTime(level * 0.008, audioContext.currentTime, 0.1)
   }
 }
 
