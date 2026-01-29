@@ -1,10 +1,12 @@
 import { createCanvas } from './canvas'
 import { SnowflakeSystem, Snowflake } from './snowflake'
-import { updateWind } from './wind'
+import { updateWind, resetWind } from './wind'
 import { reseedNoise } from './utils'
 import { initAudio, resumeAudio, isAudioReady } from './audio/engine'
 import { triggerNote } from './audio/music'
 import { stopAllVoices } from './audio/voice'
+import { updateEvolution, setDensityCallback, resetEvolution } from './evolution'
+import { renderFlakes, toggleRenderMode } from './renderer'
 
 // state
 let isPlaying = false
@@ -22,6 +24,11 @@ const { ctx, resize: resizeCanvas } = createCanvas(canvas)
 // snowflake system
 const snowflakes = new SnowflakeSystem({
   density: 25  // slightly lower for cleaner sound
+})
+
+// connect evolution density callback
+setDensityCallback((density) => {
+  snowflakes.setConfig({ density })
 })
 
 // track flakes that have triggered notes
@@ -66,6 +73,7 @@ function render(time: number) {
 
   // update systems
   updateWind(delta)
+  updateEvolution(delta)
   snowflakes.update(delta)
 
   // clear canvas
@@ -76,16 +84,7 @@ function render(time: number) {
 
   // render snowflakes
   const flakes = snowflakes.getActiveFlakes()
-  ctx.fillStyle = '#ffffff'
-  
-  for (const flake of flakes) {
-    ctx.globalAlpha = flake.opacity
-    ctx.beginPath()
-    ctx.arc(flake.x, flake.y, flake.size, 0, Math.PI * 2)
-    ctx.fill()
-  }
-  
-  ctx.globalAlpha = 1
+  renderFlakes(ctx, flakes)
 
   // process audio triggers
   processAudioTriggers(flakes)
@@ -131,6 +130,8 @@ function toggle() {
 
 function reseed() {
   reseedNoise()
+  resetWind()
+  resetEvolution()
   snowflakes.clear()
 }
 
@@ -168,6 +169,9 @@ document.addEventListener('keydown', (e) => {
       break
     case 'r':
       reseed()
+      break
+    case 'p':
+      toggleRenderMode()
       break
   }
 })

@@ -90,22 +90,22 @@ phases 1–5 constitute MVP:
 
 ---
 
-### phase 4: integration
+### phase 4: integration ✓
 
 #### 4.1 visual-audio coupling
-- [ ] flake events trigger note candidates
-- [ ] not every flake = note (probability gate)
-- [ ] mapping options:
+- [x] flake events trigger note candidates
+- [x] not every flake = note (probability gate)
+- [x] mapping options:
   - y-position → pitch (higher = higher pitch, or inverse)
   - x-position → pan
   - size → velocity/volume
   - density → harmonic complexity
 
 #### 4.2 evolution system
-- [ ] slow drift of parameters over time
-- [ ] mood shifts (scale changes every N minutes)
-- [ ] density ebbs and flows
-- [ ] occasional "quiet moments"
+- [x] slow drift of parameters over time
+- [x] mood shifts (scale changes every N minutes)
+- [x] density ebbs and flows
+- [x] occasional "quiet moments"
 
 ---
 
