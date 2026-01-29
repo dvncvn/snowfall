@@ -109,26 +109,27 @@ phases 1–5 constitute MVP:
 
 ---
 
-### phase 5: interaction & UI
+### phase 5: interaction & UI ✓
 
 #### 5.1 minimal controls
-- [ ] play/pause button (large, obvious)
-- [ ] density slider
-- [ ] drift/wind slider
-- [ ] mood selector (or random)
-- [ ] re-seed button
+- [x] play/pause button (large, obvious)
+- [x] density slider
+- [x] drift/wind slider
+- [x] mood selector (or random)
+- [x] re-seed button
 
 #### 5.2 sidebar UI
-- [ ] collapsible sidebar (left or right)
-- [ ] keyboard shortcut to toggle (e.g., `h` for hide)
-- [ ] sparse labels, understated styling
-- [ ] dark/light mode toggle
+- [x] collapsible sidebar (left or right)
+- [x] keyboard shortcut to toggle (e.g., `h` for hide)
+- [x] sparse labels, understated styling
+- [x] dark/light mode toggle
 
 #### 5.3 keyboard shortcuts
-- [ ] `space` — play/pause
-- [ ] `h` — hide/show UI
-- [ ] `r` — re-seed
-- [ ] `d` — toggle dark/light mode
+- [x] `space` — play/pause
+- [x] `h` — hide/show UI
+- [x] `r` — re-seed
+- [x] `d` — toggle dark/light mode
+- [x] `p` — toggle pixel mode (bonus)
 
 ---
 

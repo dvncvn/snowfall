@@ -33,7 +33,7 @@ const defaultConfig: MusicConfig = {
   rootNote: 60,
   minOctave: -1,
   maxOctave: 2,
-  noteProbability: 0.3,
+  noteProbability: 0.4,  // increased from 0.3
   baseAttack: 0.08,
   baseRelease: 2,
   reverbAmount: 0.6

@@ -5,8 +5,9 @@ import { reseedNoise } from './utils'
 import { initAudio, resumeAudio, isAudioReady } from './audio/engine'
 import { triggerNote } from './audio/music'
 import { stopAllVoices } from './audio/voice'
-import { updateEvolution, setDensityCallback, resetEvolution } from './evolution'
+import { updateEvolution, setDensityCallback, resetEvolution, setWindUserOverride } from './evolution'
 import { renderFlakes, toggleRenderMode } from './renderer'
+import { initControls, toggleTheme, syncRenderModeUI } from './controls'
 
 // state
 let isPlaying = false
@@ -136,13 +137,14 @@ function reseed() {
 }
 
 function updatePlayButton() {
+  // Pixel art style icons
   startBtn.innerHTML = isPlaying
-    ? `<svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-        <rect x="6" y="4" width="4" height="16" />
-        <rect x="14" y="4" width="4" height="16" />
+    ? `<svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" style="image-rendering: pixelated">
+        <rect x="3" y="2" width="4" height="12" />
+        <rect x="9" y="2" width="4" height="12" />
       </svg>`
-    : `<svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-        <polygon points="5,3 19,12 5,21" />
+    : `<svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" style="image-rendering: pixelated">
+        <polygon points="4,2 4,14 13,8" />
       </svg>`
   startBtn.classList.toggle('playing', isPlaying)
 }
@@ -155,6 +157,12 @@ function toggleSidebar() {
 startBtn.addEventListener('click', toggle)
 
 window.addEventListener('resize', resize)
+
+window.addEventListener('snowfall:reseed', reseed)
+
+window.addEventListener('snowfall:windOverride', () => {
+  setWindUserOverride(true)
+})
 
 document.addEventListener('keydown', (e) => {
   if (e.target instanceof HTMLInputElement) return
@@ -172,12 +180,17 @@ document.addEventListener('keydown', (e) => {
       break
     case 'p':
       toggleRenderMode()
+      syncRenderModeUI()
+      break
+    case 'd':
+      toggleTheme()
       break
   }
 })
 
 // initial setup
 resize()
+initControls(snowflakes)
 
 // render initial frame (stopped state)
 requestAnimationFrame(() => {

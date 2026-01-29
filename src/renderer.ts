@@ -6,7 +6,7 @@ import type { Snowflake } from './snowflake'
 
 export type RenderMode = 'soft' | 'pixel'
 
-let currentMode: RenderMode = 'soft'
+let currentMode: RenderMode = 'pixel'
 
 /**
  * Set the render mode
@@ -155,7 +155,10 @@ export function renderFlakes(
   flakes: readonly Snowflake[]
 ): void {
   configureCanvas(ctx)
-  ctx.fillStyle = '#ffffff'
+  
+  // Use dark flakes for light mode, white for dark mode
+  const isLightMode = document.documentElement.getAttribute('data-theme') === 'light'
+  ctx.fillStyle = isLightMode ? '#2a2a34' : '#ffffff'
   
   for (const flake of flakes) {
     renderFlake(ctx, flake)
