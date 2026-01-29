@@ -116,7 +116,7 @@ function shiftDensity(): void {
 
   // Notify density change for particle system
   if (onDensityChange) {
-    const baseDensity = 25
+    const baseDensity = 12
     const densityVariation = randomRange(-8, 8)
     onDensityChange(Math.max(10, baseDensity + densityVariation))
   }

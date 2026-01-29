@@ -31,7 +31,7 @@ export interface SnowfallConfig {
 }
 
 const defaultConfig: SnowfallConfig = {
-  density: 30,
+  density: 12,
   minSize: 2,
   maxSize: 16,
   minSpeed: 12,

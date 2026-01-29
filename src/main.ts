@@ -30,7 +30,7 @@ const { ctx, resize: resizeCanvas } = createCanvas(canvas)
 
 // snowflake system
 const snowflakes = new SnowflakeSystem({
-  density: 25  // slightly lower for cleaner sound
+  density: 12  // sparse for cleaner aesthetic
 })
 
 // connect evolution density callback

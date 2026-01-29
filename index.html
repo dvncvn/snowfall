@@ -32,7 +32,7 @@
       <div class="sidebar-controls">
         <div class="control-group">
           <label for="density-slider">density</label>
-          <input type="range" id="density-slider" min="10" max="50" value="25" />
+          <input type="range" id="density-slider" min="5" max="50" value="12" />
         </div>
         
         <div class="control-group">
@@ -187,54 +187,58 @@
     </aside>
 
     <div id="drum-sequencer" class="drum-sequencer">
-      <div class="seq-grid">
-        <div class="seq-track" data-track="0">
-          <span class="seq-label">k</span>
-          <div class="seq-steps"></div>
+      <div class="seq-main">
+        <div class="seq-grid">
+          <div class="seq-track" data-track="0">
+            <span class="seq-label">k</span>
+            <div class="seq-steps"></div>
+          </div>
+          <div class="seq-track" data-track="1">
+            <span class="seq-label">s</span>
+            <div class="seq-steps"></div>
+          </div>
+          <div class="seq-track" data-track="2">
+            <span class="seq-label">hc</span>
+            <div class="seq-steps"></div>
+          </div>
+          <div class="seq-track" data-track="3">
+            <span class="seq-label">ho</span>
+            <div class="seq-steps"></div>
+          </div>
+          <div class="seq-track" data-track="4">
+            <span class="seq-label">p</span>
+            <div class="seq-steps"></div>
+          </div>
+          <div class="seq-track" data-track="5">
+            <span class="seq-label">a</span>
+            <div class="seq-steps"></div>
+          </div>
         </div>
-        <div class="seq-track" data-track="1">
-          <span class="seq-label">s</span>
-          <div class="seq-steps"></div>
-        </div>
-        <div class="seq-track" data-track="2">
-          <span class="seq-label">hc</span>
-          <div class="seq-steps"></div>
-        </div>
-        <div class="seq-track" data-track="3">
-          <span class="seq-label">ho</span>
-          <div class="seq-steps"></div>
-        </div>
-        <div class="seq-track" data-track="4">
-          <span class="seq-label">p</span>
-          <div class="seq-steps"></div>
-        </div>
-        <div class="seq-track" data-track="5">
-          <span class="seq-label">a</span>
-          <div class="seq-steps"></div>
+        <div class="seq-controls">
+          <button id="seq-play" class="seq-btn">play</button>
+          <div class="seq-slider-group">
+            <label>vol</label>
+            <input type="range" id="seq-volume" min="0" max="100" value="70" />
+          </div>
+          <div class="seq-slider-group">
+            <label>bpm</label>
+            <input type="range" id="seq-tempo" min="40" max="200" value="120" />
+            <span id="seq-tempo-value">120</span>
+          </div>
+          <div class="seq-slider-group">
+            <label>swing</label>
+            <input type="range" id="seq-swing" min="0" max="100" value="0" />
+          </div>
+          <button id="seq-evolve" class="seq-btn">evolve</button>
+          <button id="seq-fill" class="seq-btn">fill</button>
+          <button id="seq-clear" class="seq-btn">clear</button>
         </div>
       </div>
-      <div class="seq-controls">
-        <button id="seq-play" class="seq-btn">play</button>
-        <div class="seq-slider-group">
-          <label>vol</label>
-          <input type="range" id="seq-volume" min="0" max="100" value="70" />
-        </div>
-        <div class="seq-slider-group">
-          <label>bpm</label>
-          <input type="range" id="seq-tempo" min="40" max="200" value="120" />
-          <span id="seq-tempo-value">120</span>
-        </div>
-        <div class="seq-slider-group">
-          <label>swing</label>
-          <input type="range" id="seq-swing" min="0" max="100" value="0" />
-        </div>
-        <div class="seq-xy-pad" id="seq-stutter-pad">
-          <div class="seq-xy-dot" id="seq-stutter-dot"></div>
-          <span class="seq-xy-label">stutter</span>
-        </div>
-        <button id="seq-evolve" class="seq-btn">evolve</button>
-        <button id="seq-fill" class="seq-btn">fill</button>
-        <button id="seq-clear" class="seq-btn">clear</button>
+      <div class="seq-xy-pad" id="seq-stutter-pad">
+        <div class="seq-xy-line-h" id="seq-stutter-line-h"></div>
+        <div class="seq-xy-line-v" id="seq-stutter-line-v"></div>
+        <span class="seq-xy-label-x">rate</span>
+        <span class="seq-xy-label-y">chance</span>
       </div>
     </div>
 

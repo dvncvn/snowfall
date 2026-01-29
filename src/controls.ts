@@ -292,9 +292,10 @@ export function initSequencerControls(): void {
     setSwing(value)
   })
 
-  // Stutter X/Y pad
+  // Stutter X/Y pad with crosshair lines
   const stutterPad = document.getElementById('seq-stutter-pad') as HTMLDivElement
-  const stutterDot = document.getElementById('seq-stutter-dot') as HTMLDivElement
+  const stutterLineH = document.getElementById('seq-stutter-line-h') as HTMLDivElement
+  const stutterLineV = document.getElementById('seq-stutter-line-v') as HTMLDivElement
   let isDraggingStutter = false
 
   const updateStutter = (e: MouseEvent | Touch) => {
@@ -302,9 +303,9 @@ export function initSequencerControls(): void {
     const x = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width))
     const y = Math.max(0, Math.min(1, 1 - (e.clientY - rect.top) / rect.height))
     
-    // Update dot position
-    stutterDot.style.left = `${x * 100}%`
-    stutterDot.style.top = `${(1 - y) * 100}%`
+    // Update crosshair lines
+    stutterLineV.style.left = `${x * 100}%`
+    stutterLineH.style.top = `${(1 - y) * 100}%`
     
     // Update stutter params
     setStutter(x, y)
