@@ -2,7 +2,7 @@
  * Synth voice with oscillator, filter, and envelope
  */
 
-import { getAudioContext, getDryNode, getReverbNode } from './engine'
+import { getAudioContext, getDryNode, getReverbNode, getDelayNode } from './engine'
 
 export interface VoiceParams {
   frequency: number
@@ -43,6 +43,7 @@ export function playNote(params: Partial<VoiceParams> = {}): void {
   const ctx = getAudioContext()
   const dryNode = getDryNode()
   const reverbNode = getReverbNode()
+  const delayNode = getDelayNode()
   
   if (!ctx || !dryNode || !reverbNode) return
 
@@ -83,7 +84,7 @@ export function playNote(params: Partial<VoiceParams> = {}): void {
   filter.connect(gain)
   gain.connect(panner)
   
-  // Split to dry and reverb
+  // Split to dry, reverb, and delay
   const dryAmount = 1 - p.reverbSend * 0.5
   const wetAmount = p.reverbSend
   
@@ -96,6 +97,14 @@ export function playNote(params: Partial<VoiceParams> = {}): void {
   wetSend.gain.value = wetAmount
   panner.connect(wetSend)
   wetSend.connect(reverbNode)
+
+  // Send to delay (uses same send amount as reverb)
+  if (delayNode) {
+    const delaySend = ctx.createGain()
+    delaySend.gain.value = wetAmount * 0.7
+    panner.connect(delaySend)
+    delaySend.connect(delayNode)
+  }
 
   // Envelope
   const peakGain = 0.15 * p.velocity

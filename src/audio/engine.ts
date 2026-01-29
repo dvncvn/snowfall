@@ -8,6 +8,12 @@ let reverbGain: GainNode | null = null
 let reverbNode: ConvolverNode | null = null
 let dryGain: GainNode | null = null
 
+// Delay effect
+let delayNode: DelayNode | null = null
+let delayFeedback: GainNode | null = null
+let delayGain: GainNode | null = null
+let delayFilter: BiquadFilterNode | null = null
+
 /**
  * Initialize audio engine (call on user gesture)
  */
@@ -36,6 +42,29 @@ export async function initAudio(): Promise<void> {
   
   reverbGain.connect(reverbNode)
   reverbNode.connect(masterGain)
+
+  // Delay effect (ping-pong style with filter)
+  delayNode = audioContext.createDelay(2.0)
+  delayNode.delayTime.value = 0.3
+
+  delayFeedback = audioContext.createGain()
+  delayFeedback.gain.value = 0.4
+
+  delayGain = audioContext.createGain()
+  delayGain.gain.value = 0.3
+
+  // Filter in feedback loop for darker repeats
+  delayFilter = audioContext.createBiquadFilter()
+  delayFilter.type = 'lowpass'
+  delayFilter.frequency.value = 2000
+
+  // Delay routing: input -> delay -> filter -> feedback -> delay
+  //                              \-> delayGain -> master
+  delayNode.connect(delayFilter)
+  delayFilter.connect(delayFeedback)
+  delayFeedback.connect(delayNode)
+  delayNode.connect(delayGain)
+  delayGain.connect(masterGain)
 }
 
 /**
@@ -95,6 +124,42 @@ export function setReverbMix(mix: number): void {
   if (reverbGain && dryGain) {
     reverbGain.gain.setTargetAtTime(mix * 0.6, audioContext!.currentTime, 0.1)
     dryGain.gain.setTargetAtTime(1 - mix * 0.4, audioContext!.currentTime, 0.1)
+  }
+}
+
+/**
+ * Get the delay send node
+ */
+export function getDelayNode(): DelayNode | null {
+  return delayNode
+}
+
+/**
+ * Set delay time (0-2 seconds)
+ */
+export function setDelayTime(time: number): void {
+  if (delayNode && audioContext) {
+    delayNode.delayTime.setTargetAtTime(time, audioContext.currentTime, 0.1)
+  }
+}
+
+/**
+ * Set delay feedback (0-1)
+ */
+export function setDelayFeedback(feedback: number): void {
+  if (delayFeedback && audioContext) {
+    // Cap at 0.85 to prevent runaway feedback
+    const safeFeedback = Math.min(feedback, 0.85)
+    delayFeedback.gain.setTargetAtTime(safeFeedback, audioContext.currentTime, 0.1)
+  }
+}
+
+/**
+ * Set delay mix (0-1)
+ */
+export function setDelayMix(mix: number): void {
+  if (delayGain && audioContext) {
+    delayGain.gain.setTargetAtTime(mix * 0.5, audioContext.currentTime, 0.1)
   }
 }
 

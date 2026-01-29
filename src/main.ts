@@ -1,7 +1,7 @@
 import { createCanvas } from './canvas'
 import { SnowflakeSystem, Snowflake } from './snowflake'
 import { updateWind, resetWind } from './wind'
-import { reseedNoise } from './utils'
+import { reseedNoise, prefersReducedMotion } from './utils'
 import { initAudio, resumeAudio, isAudioReady } from './audio/engine'
 import { triggerNote } from './audio/music'
 import { stopAllVoices } from './audio/voice'
@@ -191,6 +191,11 @@ document.addEventListener('keydown', (e) => {
 // initial setup
 resize()
 initControls(snowflakes)
+
+// Respect reduced motion preference
+if (prefersReducedMotion()) {
+  snowflakes.setConfig({ density: 10, minSpeed: 10, maxSpeed: 30 })
+}
 
 // render initial frame (stopped state)
 requestAnimationFrame(() => {

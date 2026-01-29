@@ -6,13 +6,14 @@ import { SnowflakeSystem } from './snowflake'
 import { setWindConfig } from './wind'
 import { setMusicConfig, type ScaleName } from './audio/music'
 import { setRenderMode, getRenderMode, type RenderMode } from './renderer'
+import { setDelayTime, setDelayFeedback, setDelayMix } from './audio/engine'
 
 // Theme management
 let currentTheme: 'dark' | 'light' = 'dark'
 
 // Base sizes for scaling
-const BASE_MIN_SIZE = 1.5
-const BASE_MAX_SIZE = 4
+const BASE_MIN_SIZE = 2
+const BASE_MAX_SIZE = 8
 
 export function initControls(snowflakes: SnowflakeSystem): void {
   // Density slider
@@ -32,11 +33,11 @@ export function initControls(snowflakes: SnowflakeSystem): void {
     })
   })
 
-  // Wind slider
+  // Wind slider (0-100 maps to 0-1.0 strength)
   const windSlider = document.getElementById('wind-slider') as HTMLInputElement
   windSlider.addEventListener('input', () => {
     const value = parseInt(windSlider.value, 10) / 100
-    setWindConfig({ strength: value * 0.6 })
+    setWindConfig({ strength: value })
     // Mark wind as user-controlled
     window.dispatchEvent(new CustomEvent('snowfall:windOverride'))
   })
@@ -54,6 +55,25 @@ export function initControls(snowflakes: SnowflakeSystem): void {
   renderSelect.addEventListener('change', () => {
     const value = renderSelect.value as RenderMode
     setRenderMode(value)
+  })
+
+  // Delay controls
+  const delayTimeSlider = document.getElementById('delay-time') as HTMLInputElement
+  delayTimeSlider.addEventListener('input', () => {
+    const value = parseInt(delayTimeSlider.value, 10) / 100
+    setDelayTime(value * 1.0)  // 0-1 second
+  })
+
+  const delayFeedbackSlider = document.getElementById('delay-feedback') as HTMLInputElement
+  delayFeedbackSlider.addEventListener('input', () => {
+    const value = parseInt(delayFeedbackSlider.value, 10) / 100
+    setDelayFeedback(value * 0.85)  // 0-85%
+  })
+
+  const delayMixSlider = document.getElementById('delay-mix') as HTMLInputElement
+  delayMixSlider.addEventListener('input', () => {
+    const value = parseInt(delayMixSlider.value, 10) / 100
+    setDelayMix(value)
   })
 
   // Reseed button

@@ -2,6 +2,13 @@
  * Utility functions
  */
 
+/**
+ * Check if user prefers reduced motion
+ */
+export function prefersReducedMotion(): boolean {
+  return window.matchMedia('(prefers-reduced-motion: reduce)').matches
+}
+
 export function lerp(a: number, b: number, t: number): number {
   return a + (b - a) * t
 }

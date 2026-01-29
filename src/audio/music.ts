@@ -41,6 +41,10 @@ const defaultConfig: MusicConfig = {
 
 let config = { ...defaultConfig }
 
+// Rate limiting for performance
+const NOTE_RATE_LIMIT = 100 // min ms between notes
+let lastNoteTime = 0
+
 /**
  * Convert MIDI note to frequency
  */
@@ -67,6 +71,11 @@ export function getRandomNote(): number {
  * @param size - flake size (0-1, normalized)
  */
 export function triggerNote(x: number, y: number, size: number): void {
+  // Rate limit for performance
+  const now = performance.now()
+  if (now - lastNoteTime < NOTE_RATE_LIMIT) return
+  lastNoteTime = now
+
   // Probability gate
   if (Math.random() > config.noteProbability) return
 

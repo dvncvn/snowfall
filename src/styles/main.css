@@ -130,6 +130,20 @@ body {
   margin-top: 8px;
 }
 
+.control-divider {
+  height: 1px;
+  background: var(--border);
+  margin: 8px 0;
+}
+
+.control-label {
+  font-size: 11px;
+  color: var(--fg-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 4px;
+}
+
 /* range sliders */
 input[type="range"] {
   -webkit-appearance: none;

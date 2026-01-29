@@ -11,9 +11,9 @@ export interface WindConfig {
 }
 
 const defaultConfig: WindConfig = {
-  strength: 0.3,
-  turbulence: 0.002,
-  timeScale: 0.0003
+  strength: 0.5,
+  turbulence: 0.003,
+  timeScale: 0.0005
 }
 
 let config = { ...defaultConfig }

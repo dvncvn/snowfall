@@ -32,8 +32,8 @@ export interface SnowfallConfig {
 
 const defaultConfig: SnowfallConfig = {
   density: 30,
-  minSize: 1.5,
-  maxSize: 4,
+  minSize: 2,
+  maxSize: 8,
   minSpeed: 20,
   maxSpeed: 60,
   minLifespan: 8,
@@ -41,6 +41,9 @@ const defaultConfig: SnowfallConfig = {
   fadeInDuration: 1,
   fadeOutDuration: 2
 }
+
+// Performance: max particles to prevent runaway memory
+const MAX_PARTICLES = 500
 
 export class SnowflakeSystem {
   private pool: Snowflake[] = []
@@ -89,13 +92,18 @@ export class SnowflakeSystem {
   /**
    * Get or create a flake from pool
    */
-  private spawn(): Snowflake {
+  private spawn(): Snowflake | null {
     // Try to reuse inactive flake
     const inactive = this.pool.find(f => !f.active)
     if (inactive) {
       const newFlake = this.createFlake()
       Object.assign(inactive, newFlake)
       return inactive
+    }
+    
+    // Cap total particles for performance
+    if (this.pool.length >= MAX_PARTICLES) {
+      return null
     }
     
     // Create new flake
@@ -132,15 +140,15 @@ export class SnowflakeSystem {
       // Get wind at position
       const wind = getWind(flake.x, flake.y)
 
-      // Apply wind
-      flake.vx += wind.x * flake.driftFactor * 50 * delta
-      flake.vy += wind.y * flake.driftFactor * 20 * delta
+      // Apply wind (stronger effect)
+      flake.vx += wind.x * flake.driftFactor * 150 * delta
+      flake.vy += wind.y * flake.driftFactor * 30 * delta
 
-      // Dampen horizontal velocity
-      flake.vx *= 0.98
+      // Dampen horizontal velocity (less damping = more drift)
+      flake.vx *= 0.995
 
-      // Clamp velocities
-      flake.vx = clamp(flake.vx, -30, 30)
+      // Clamp velocities (higher max for more dramatic movement)
+      flake.vx = clamp(flake.vx, -80, 80)
       flake.vy = clamp(flake.vy, 10, 100)
 
       // Update position
