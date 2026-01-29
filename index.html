@@ -114,6 +114,26 @@
           <input type="range" id="reverb-slider" min="0" max="100" value="60" />
         </div>
 
+        <div class="control-section">
+          <span class="section-label">slide</span>
+          <div class="control-group">
+            <label for="slide-amount">amount</label>
+            <input type="range" id="slide-amount" min="0" max="100" value="45" />
+          </div>
+          <div class="control-group">
+            <label for="slide-chance">chance</label>
+            <input type="range" id="slide-chance" min="0" max="100" value="30" />
+          </div>
+          <div class="control-group">
+            <label for="slide-direction">direction</label>
+            <input type="range" id="slide-direction" min="0" max="100" value="50" />
+            <div class="slide-labels">
+              <span>down</span>
+              <span>up</span>
+            </div>
+          </div>
+        </div>
+
         <div class="control-group checkbox-group">
           <label class="checkbox-label">
             <input type="checkbox" id="drone-toggle" checked />
@@ -238,6 +258,8 @@
           <button id="seq-evolve" class="seq-btn">evolve</button>
           <button id="seq-fill" class="seq-btn">fill</button>
           <button id="seq-clear" class="seq-btn">clear</button>
+          <button id="seq-randomize" class="seq-btn">rnd</button>
+          <button id="seq-reset" class="seq-btn">rst</button>
         </div>
       </div>
       <div class="seq-xy-pad" id="seq-stutter-pad">

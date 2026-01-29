@@ -38,8 +38,7 @@ setDensityCallback((density) => {
   snowflakes.setConfig({ density })
 })
 
-// track flakes that have triggered notes
-const triggeredFlakes = new WeakSet<Snowflake>()
+// (flake.hasTriggered property tracks which flakes have triggered notes)
 
 // Ripple effect system
 interface Ripple {
@@ -145,12 +144,13 @@ function processAudioTriggers(flakes: readonly Snowflake[]) {
   const height = window.innerHeight
 
   for (const flake of flakes) {
-    // Only trigger once per flake, when it reaches ~20% down the screen
-    if (triggeredFlakes.has(flake)) continue
+    // Only trigger once per flake, when it reaches ~15% down the screen
+    if (flake.hasTriggered) continue
     if (flake.y < height * 0.15) continue
     if (flake.opacity < 0.3) continue
 
-    triggeredFlakes.add(flake)
+    // Mark as triggered (resets when flake is recycled)
+    ;(flake as { hasTriggered: boolean }).hasTriggered = true
 
     // Normalize position
     const x = flake.x / width

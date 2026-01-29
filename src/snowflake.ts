@@ -16,6 +16,7 @@ export interface Snowflake {
   lifespan: number
   driftFactor: number  // how much wind affects this flake
   active: boolean
+  hasTriggered: boolean  // whether this flake has triggered audio
 }
 
 export interface SnowfallConfig {
@@ -86,7 +87,8 @@ export class SnowflakeSystem {
       age: 0,
       lifespan: randomRange(this.config.minLifespan, this.config.maxLifespan),
       driftFactor: 1 - sizeFactor * 0.5,  // smaller = more drift
-      active: true
+      active: true,
+      hasTriggered: false
     }
   }
 

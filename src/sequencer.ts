@@ -18,9 +18,10 @@ const TRACK_VOICES: DrumVoice[] = [
   'accent'
 ]
 
-// Pattern state: tracks x steps
-const pattern: boolean[][] = Array.from({ length: TRACKS }, () =>
-  Array(STEPS).fill(false) as boolean[]
+// Pattern state: tracks x steps (0=off, 1-4=subdivision count)
+const MAX_SUBDIV = 4
+const pattern: number[][] = Array.from({ length: TRACKS }, () =>
+  Array(STEPS).fill(0) as number[]
 )
 
 // Playback state
@@ -94,25 +95,35 @@ export function getStutter(): { rate: number; chance: number } {
 /**
  * Get current pattern state
  */
-export function getPattern(): boolean[][] {
+export function getPattern(): number[][] {
   return pattern
 }
 
 /**
- * Toggle a step in the pattern
+ * Toggle a step in the pattern (cycles through subdivisions)
+ * Returns new subdivision value (0=off, 1-4=subdivision count)
  */
-export function toggleStep(track: number, step: number): boolean {
-  if (track < 0 || track >= TRACKS || step < 0 || step >= STEPS) return false
-  pattern[track]![step] = !pattern[track]![step]
+export function toggleStep(track: number, step: number): number {
+  if (track < 0 || track >= TRACKS || step < 0 || step >= STEPS) return 0
+  // Cycle: 0 -> 1 -> 2 -> 3 -> 4 -> 0
+  pattern[track]![step] = (pattern[track]![step]! + 1) % (MAX_SUBDIV + 1)
   return pattern[track]![step]!
 }
 
 /**
- * Set a step value directly
+ * Set a step value directly (0=off, 1-4=subdivision)
  */
-export function setStep(track: number, step: number, value: boolean): void {
+export function setStep(track: number, step: number, value: number): void {
   if (track < 0 || track >= TRACKS || step < 0 || step >= STEPS) return
-  pattern[track]![step] = value
+  pattern[track]![step] = Math.max(0, Math.min(MAX_SUBDIV, value))
+}
+
+/**
+ * Get step value (subdivision count)
+ */
+export function getStepValue(track: number, step: number): number {
+  if (track < 0 || track >= TRACKS || step < 0 || step >= STEPS) return 0
+  return pattern[track]![step]!
 }
 
 /**
@@ -121,7 +132,7 @@ export function setStep(track: number, step: number, value: boolean): void {
 export function clearPattern(): void {
   for (let t = 0; t < TRACKS; t++) {
     for (let s = 0; s < STEPS; s++) {
-      pattern[t]![s] = false
+      pattern[t]![s] = 0
     }
   }
 }
@@ -262,14 +273,22 @@ function scheduleStep(step: number, time: number): void {
 
   // Trigger drums for this step
   for (let track = 0; track < TRACKS; track++) {
-    if (pattern[track]![step]) {
+    const subdiv = pattern[track]![step]!
+    if (subdiv > 0) {
       // Add slight velocity variation for humanization
-      const velocity = 0.8 + Math.random() * 0.2
-      triggerDrum(TRACK_VOICES[track]!, time, velocity)
+      const baseVelocity = 0.8 + Math.random() * 0.2
       
-      // Check for stutter
+      // Schedule subdivided hits
+      const interval = stepDuration / subdiv
+      for (let i = 0; i < subdiv; i++) {
+        // Slight velocity decay for subsequent hits
+        const velocity = baseVelocity * (1 - i * 0.08)
+        triggerDrum(TRACK_VOICES[track]!, time + i * interval, velocity)
+      }
+      
+      // Check for stutter (only on first hit)
       if (stutterRate > 0.05 && stutterChance > 0.05 && Math.random() < stutterChance) {
-        scheduleStutter(track, time, stepDuration, velocity)
+        scheduleStutter(track, time, stepDuration, baseVelocity)
       }
     }
   }
@@ -357,7 +376,7 @@ export function fillEuclidean(): void {
     // Rotate by random amount for variation
     const rotation = Math.floor(Math.random() * STEPS)
     for (let s = 0; s < STEPS; s++) {
-      pattern[t]![s] = rhythm[(s + rotation) % STEPS]!
+      pattern[t]![s] = rhythm[(s + rotation) % STEPS]! ? 1 : 0
     }
   }
 }
@@ -377,7 +396,7 @@ export function fillRandom(): void {
 
   for (let t = 0; t < TRACKS; t++) {
     for (let s = 0; s < STEPS; s++) {
-      pattern[t]![s] = Math.random() < probabilities[t]!
+      pattern[t]![s] = Math.random() < probabilities[t]! ? 1 : 0
     }
   }
 }
@@ -394,7 +413,7 @@ export function fillGlitch(): void {
     for (let s = 0; s < STEPS; s++) {
       // 15% chance to flip any step
       if (Math.random() < 0.15) {
-        pattern[t]![s] = !pattern[t]![s]
+        pattern[t]![s] = pattern[t]![s]! > 0 ? 0 : 1
       }
     }
   }
@@ -405,68 +424,140 @@ export function fillGlitch(): void {
   const burstLength = Math.floor(Math.random() * 3) + 2
 
   for (let s = burstStart; s < Math.min(burstStart + burstLength, STEPS); s++) {
-    pattern[burstTrack]![s] = true
+    pattern[burstTrack]![s] = 1
   }
 }
 
 /**
+ * Calculate pattern density (0-1)
+ */
+function getPatternDensity(): number {
+  let activeCount = 0
+  for (let t = 0; t < TRACKS; t++) {
+    for (let s = 0; s < STEPS; s++) {
+      if (pattern[t]![s]! > 0) activeCount++
+    }
+  }
+  return activeCount / (TRACKS * STEPS)
+}
+
+/**
+ * Remove random notes from the pattern
+ */
+function prunePattern(count: number): void {
+  const activeSteps: Array<{ t: number; s: number }> = []
+  for (let t = 0; t < TRACKS; t++) {
+    for (let s = 0; s < STEPS; s++) {
+      if (pattern[t]![s]! > 0) {
+        activeSteps.push({ t, s })
+      }
+    }
+  }
+  
+  // Shuffle and remove
+  for (let i = activeSteps.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1))
+    ;[activeSteps[i], activeSteps[j]] = [activeSteps[j]!, activeSteps[i]!]
+  }
+  
+  const toRemove = Math.min(count, activeSteps.length)
+  for (let i = 0; i < toRemove; i++) {
+    const { t, s } = activeSteps[i]!
+    pattern[t]![s] = 0
+  }
+}
+
+// Density thresholds for pruning
+const DENSITY_SOFT_CAP = 0.35  // Start biasing toward removal
+const DENSITY_HARD_CAP = 0.50  // Force pruning
+
+/**
  * Subtly mutate the current pattern (for evolve mode)
- * Makes small changes rather than replacing entirely
+ * Prioritizes sparseness - removes notes when pattern gets too full
  */
 function mutatePattern(): void {
+  const density = getPatternDensity()
+  
+  // If too full, force pruning
+  if (density > DENSITY_HARD_CAP) {
+    const excess = Math.ceil((density - DENSITY_SOFT_CAP) * TRACKS * STEPS)
+    prunePattern(Math.max(2, excess))
+    return
+  }
+  
+  // Bias toward removal when approaching cap
+  const removalBias = density > DENSITY_SOFT_CAP 
+    ? 0.7 + (density - DENSITY_SOFT_CAP) / (DENSITY_HARD_CAP - DENSITY_SOFT_CAP) * 0.25
+    : 0.4  // Default slight bias toward removal
+  
   // Pick mutation type randomly
   const mutationType = Math.random()
   
-  if (mutationType < 0.3) {
-    // Flip a few random steps
-    const flips = Math.floor(Math.random() * 4) + 1
+  if (mutationType < 0.25) {
+    // Flip steps - bias toward turning off
+    const flips = Math.floor(Math.random() * 3) + 1
     for (let i = 0; i < flips; i++) {
       const t = Math.floor(Math.random() * TRACKS)
       const s = Math.floor(Math.random() * STEPS)
-      pattern[t]![s] = !pattern[t]![s]
+      if (pattern[t]![s]! > 0) {
+        // Active step: likely turn off
+        if (Math.random() < removalBias) {
+          pattern[t]![s] = 0
+        }
+      } else {
+        // Inactive step: less likely to turn on
+        if (Math.random() > removalBias) {
+          pattern[t]![s] = 1
+        }
+      }
     }
-  } else if (mutationType < 0.5) {
-    // Shift one track left or right
+  } else if (mutationType < 0.4) {
+    // Shift one track left or right (neutral - doesn't change density)
     const t = Math.floor(Math.random() * TRACKS)
     const direction = Math.random() < 0.5 ? 1 : -1
     const shifted = [...pattern[t]!]
     for (let s = 0; s < STEPS; s++) {
       pattern[t]![s] = shifted[(s - direction + STEPS) % STEPS]!
     }
-  } else if (mutationType < 0.7) {
-    // Add or remove a hit from one track
+  } else if (mutationType < 0.65) {
+    // Remove hits (always reduces density)
     const t = Math.floor(Math.random() * TRACKS)
-    const activeSteps = pattern[t]!.map((v, i) => v ? i : -1).filter(i => i >= 0)
+    const activeSteps = pattern[t]!.map((v, i) => v > 0 ? i : -1).filter(i => i >= 0)
     
-    if (activeSteps.length > 0 && Math.random() < 0.5) {
-      // Remove a random hit
-      const removeIdx = activeSteps[Math.floor(Math.random() * activeSteps.length)]!
-      pattern[t]![removeIdx] = false
-    } else {
-      // Add a hit at random empty step
-      const emptySteps = pattern[t]!.map((v, i) => !v ? i : -1).filter(i => i >= 0)
-      if (emptySteps.length > 0) {
-        const addIdx = emptySteps[Math.floor(Math.random() * emptySteps.length)]!
-        pattern[t]![addIdx] = true
+    if (activeSteps.length > 0) {
+      // Remove 1-2 hits
+      const removeCount = Math.min(activeSteps.length, 1 + (Math.random() < 0.3 ? 1 : 0))
+      for (let i = 0; i < removeCount; i++) {
+        const idx = Math.floor(Math.random() * activeSteps.length)
+        const removeIdx = activeSteps.splice(idx, 1)[0]!
+        pattern[t]![removeIdx] = 0
       }
     }
-  } else if (mutationType < 0.85) {
-    // Swap two steps on a track
+  } else if (mutationType < 0.75) {
+    // Swap two steps on a track (neutral - doesn't change density)
     const t = Math.floor(Math.random() * TRACKS)
     const s1 = Math.floor(Math.random() * STEPS)
     const s2 = Math.floor(Math.random() * STEPS)
     const temp = pattern[t]![s1]
     pattern[t]![s1] = pattern[t]![s2]!
     pattern[t]![s2] = temp!
-  } else {
-    // Replace one track with new euclidean rhythm
+  } else if (mutationType < 0.85) {
+    // Clear a track section (reduces density)
     const t = Math.floor(Math.random() * TRACKS)
-    const densities = [3, 2, 6, 1, 3, 1]  // typical densities per track
-    const hits = Math.max(1, densities[t]! + Math.floor(Math.random() * 3) - 1)
+    const start = Math.floor(Math.random() * 12)
+    const length = Math.floor(Math.random() * 4) + 2
+    for (let s = start; s < Math.min(start + length, STEPS); s++) {
+      pattern[t]![s] = 0
+    }
+  } else {
+    // Replace one track with sparser euclidean rhythm
+    const t = Math.floor(Math.random() * TRACKS)
+    const sparseDensities = [2, 1, 4, 1, 2, 1]  // sparser than default
+    const hits = Math.max(1, sparseDensities[t]! + Math.floor(Math.random() * 2) - 1)
     const rhythm = euclidean(hits, STEPS)
     const rotation = Math.floor(Math.random() * STEPS)
     for (let s = 0; s < STEPS; s++) {
-      pattern[t]![s] = rhythm[(s + rotation) % STEPS]!
+      pattern[t]![s] = rhythm[(s + rotation) % STEPS]! ? 1 : 0
     }
   }
 }

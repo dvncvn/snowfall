@@ -197,6 +197,15 @@ input[type="range"]::-moz-range-thumb {
   padding: 0 2px;
 }
 
+.slide-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10px;
+  color: var(--fg-muted);
+  font-family: var(--font-mono);
+  padding: 0 2px;
+}
+
 /* checkbox */
 .checkbox-group {
   flex-direction: row;
@@ -510,6 +519,44 @@ select:focus {
 .seq-step.playing {
   border-color: var(--fg);
   opacity: 1;
+}
+
+/* Subdivision indicators - show dots for 2, 3, 4 subdivisions */
+.seq-step[data-subdiv="2"]::after,
+.seq-step[data-subdiv="3"]::after,
+.seq-step[data-subdiv="4"]::after {
+  content: '';
+  position: absolute;
+  bottom: 2px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 1px;
+}
+
+.seq-step {
+  position: relative;
+}
+
+.seq-step[data-subdiv="2"]::after {
+  content: '··';
+  font-size: 8px;
+  line-height: 1;
+  color: var(--bg);
+}
+
+.seq-step[data-subdiv="3"]::after {
+  content: '···';
+  font-size: 8px;
+  line-height: 1;
+  color: var(--bg);
+}
+
+.seq-step[data-subdiv="4"]::after {
+  content: '····';
+  font-size: 8px;
+  line-height: 1;
+  color: var(--bg);
 }
 
 /* Beat grouping - highlight every 4th step boundary */

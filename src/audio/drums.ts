@@ -16,6 +16,25 @@ let drumDelaySend: GainNode | null = null
 let toneFilter = 0.5   // 0-1: filter cutoff (0=dark, 1=bright)
 let toneDecay = 0.5    // 0-1: decay time (0=short, 1=long)
 
+// Synthesis parameters (can be randomized)
+interface DrumParams {
+  kick: { pitch: number; pitchDecay: number; noiseAmt: number; click: number }
+  snare: { pitch: number; noiseFreq: number; tone: number }
+  hihat: { freqs: number[]; decay: number }
+  perc: { pitchRange: [number, number]; fmRatio: number }
+  accent: { character: number }
+}
+
+const defaultParams: DrumParams = {
+  kick: { pitch: 180, pitchDecay: 0.04, noiseAmt: 0.6, click: 0.4 },
+  snare: { pitch: 250, noiseFreq: 2000, tone: 0.5 },
+  hihat: { freqs: [6000, 7500, 9200], decay: 0.008 },
+  perc: { pitchRange: [400, 1600], fmRatio: 2.5 },
+  accent: { character: 0.5 }
+}
+
+let synthParams: DrumParams = JSON.parse(JSON.stringify(defaultParams))
+
 /**
  * Initialize drum bus (call after audio context is ready)
  */
@@ -77,6 +96,50 @@ export function getDrumTone(): { filter: number; decay: number } {
   return { filter: toneFilter, decay: toneDecay }
 }
 
+/**
+ * Randomize drum synthesis parameters
+ */
+export function randomizeDrums(): void {
+  synthParams = {
+    kick: {
+      pitch: 100 + Math.random() * 200,          // 100-300
+      pitchDecay: 0.02 + Math.random() * 0.08,   // 0.02-0.1
+      noiseAmt: 0.2 + Math.random() * 0.8,       // 0.2-1.0
+      click: Math.random() * 0.8                  // 0-0.8
+    },
+    snare: {
+      pitch: 150 + Math.random() * 250,          // 150-400
+      noiseFreq: 1000 + Math.random() * 4000,    // 1000-5000
+      tone: Math.random()                         // 0-1
+    },
+    hihat: {
+      freqs: [
+        4000 + Math.random() * 5000,             // 4000-9000
+        5000 + Math.random() * 6000,             // 5000-11000
+        7000 + Math.random() * 6000              // 7000-13000
+      ],
+      decay: 0.004 + Math.random() * 0.02        // 0.004-0.024
+    },
+    perc: {
+      pitchRange: [
+        200 + Math.random() * 600,               // 200-800
+        800 + Math.random() * 1600               // 800-2400
+      ],
+      fmRatio: 1 + Math.random() * 5             // 1-6
+    },
+    accent: {
+      character: Math.random()                    // 0-1
+    }
+  }
+}
+
+/**
+ * Reset drum synthesis to defaults
+ */
+export function resetDrums(): void {
+  synthParams = JSON.parse(JSON.stringify(defaultParams))
+}
+
 // Helper to apply tone to decay times
 function applyDecay(baseDecay: number): number {
   // Scale decay: 0.15x to 3x based on toneDecay (more dramatic range)
@@ -127,6 +190,7 @@ export function triggerDrum(voice: DrumVoice, time?: number, velocity = 1): void
  * Kick drum - punchy IDM style with fast pitch sweep and click
  */
 function triggerKick(ctx: AudioContext, time: number, velocity: number): void {
+  const p = synthParams.kick
   // Randomize pitch slightly for variation
   const pitchVar = 0.9 + Math.random() * 0.2
   const decay = applyDecay(0.15)
@@ -134,8 +198,8 @@ function triggerKick(ctx: AudioContext, time: number, velocity: number): void {
   // Sine body - faster sweep for punch
   const osc = ctx.createOscillator()
   osc.type = 'sine'
-  osc.frequency.setValueAtTime(180 * pitchVar, time)
-  osc.frequency.exponentialRampToValueAtTime(35, time + 0.04)
+  osc.frequency.setValueAtTime(p.pitch * pitchVar, time)
+  osc.frequency.exponentialRampToValueAtTime(35, time + p.pitchDecay)
 
   const oscGain = ctx.createGain()
   oscGain.gain.setValueAtTime(0.9 * velocity, time)
@@ -148,7 +212,7 @@ function triggerKick(ctx: AudioContext, time: number, velocity: number): void {
   clickOsc.frequency.exponentialRampToValueAtTime(60, time + 0.008)
   
   const clickGain = ctx.createGain()
-  clickGain.gain.setValueAtTime(0.4 * velocity * toneFilter, time)
+  clickGain.gain.setValueAtTime(p.click * velocity * toneFilter, time)
   clickGain.gain.exponentialRampToValueAtTime(0.001, time + 0.01)
 
   // Noise transient
@@ -162,7 +226,7 @@ function triggerKick(ctx: AudioContext, time: number, velocity: number): void {
   noiseFilter.Q.value = 6
 
   const noiseGain = ctx.createGain()
-  noiseGain.gain.setValueAtTime(0.6 * velocity, time)
+  noiseGain.gain.setValueAtTime(p.noiseAmt * velocity, time)
   noiseGain.gain.exponentialRampToValueAtTime(0.001, time + 0.012)
 
   // Connect
@@ -189,6 +253,7 @@ function triggerKick(ctx: AudioContext, time: number, velocity: number): void {
  * Snare drum - IDM style snappy crack
  */
 function triggerSnare(ctx: AudioContext, time: number, velocity: number): void {
+  const p = synthParams.snare
   const pitchVar = 0.85 + Math.random() * 0.3
   const decay = applyDecay(0.06)
   
@@ -199,27 +264,27 @@ function triggerSnare(ctx: AudioContext, time: number, velocity: number): void {
 
   const noiseFilter = ctx.createBiquadFilter()
   noiseFilter.type = 'highpass'
-  noiseFilter.frequency.value = applyFilter(2000)
+  noiseFilter.frequency.value = applyFilter(p.noiseFreq)
   noiseFilter.Q.value = 4
 
   const noiseFilter2 = ctx.createBiquadFilter()
   noiseFilter2.type = 'peaking'
-  noiseFilter2.frequency.value = applyFilter(5000)
+  noiseFilter2.frequency.value = applyFilter(p.noiseFreq * 2.5)
   noiseFilter2.Q.value = 8
   noiseFilter2.gain.value = 6
 
   const noiseGain = ctx.createGain()
-  noiseGain.gain.setValueAtTime(0.45 * velocity, time)
+  noiseGain.gain.setValueAtTime((0.3 + p.tone * 0.3) * velocity, time)
   noiseGain.gain.exponentialRampToValueAtTime(0.001, time + decay)
 
   // Pitched click/thwack
   const osc = ctx.createOscillator()
   osc.type = 'triangle'
-  osc.frequency.setValueAtTime(250 * pitchVar, time)
+  osc.frequency.setValueAtTime(p.pitch * pitchVar, time)
   osc.frequency.exponentialRampToValueAtTime(100, time + 0.015)
 
   const oscGain = ctx.createGain()
-  oscGain.gain.setValueAtTime(0.5 * velocity, time)
+  oscGain.gain.setValueAtTime((0.3 + (1 - p.tone) * 0.4) * velocity, time)
   oscGain.gain.exponentialRampToValueAtTime(0.001, time + applyDecay(0.025))
 
   // Distortion for bite
@@ -247,10 +312,11 @@ function triggerSnare(ctx: AudioContext, time: number, velocity: number): void {
  * Hi-hat closed - ultra tight click
  */
 function triggerHihatClosed(ctx: AudioContext, time: number, velocity: number): void {
-  const decay = applyDecay(0.008)
+  const p = synthParams.hihat
+  const decay = applyDecay(p.decay)
   
   // Metallic oscillator cluster
-  const freqs = [6000, 7500, 9200].map(f => applyFilter(f) * (0.95 + Math.random() * 0.1))
+  const freqs = p.freqs.map(f => applyFilter(f) * (0.95 + Math.random() * 0.1))
   
   freqs.forEach((freq, i) => {
     const osc = ctx.createOscillator()
@@ -299,8 +365,9 @@ function triggerHihatClosed(ctx: AudioContext, time: number, velocity: number): 
  * Hi-hat open - sizzle with controlled decay
  */
 function triggerHihatOpen(ctx: AudioContext, time: number, velocity: number): void {
-  // Metallic cluster
-  const freqs = [5500, 7000, 8500, 10000]
+  const p = synthParams.hihat
+  // Metallic cluster - shift freqs down for open hat variation
+  const freqs = [p.freqs[0]! * 0.9, p.freqs[1]!, p.freqs[2]! * 0.9, p.freqs[2]! * 1.1]
   
   freqs.forEach((freq, i) => {
     const osc = ctx.createOscillator()
@@ -349,20 +416,21 @@ function triggerHihatOpen(ctx: AudioContext, time: number, velocity: number): vo
  * Perc - glitchy FM blip with random pitch
  */
 function triggerPerc(ctx: AudioContext, time: number, velocity: number): void {
-  // Random pitch for variety
-  const basePitch = 400 + Math.random() * 1200
+  const p = synthParams.perc
+  // Random pitch for variety within defined range
+  const basePitch = p.pitchRange[0] + Math.random() * (p.pitchRange[1] - p.pitchRange[0])
   const pitchDrop = basePitch * (0.1 + Math.random() * 0.3)
   
   // Carrier
   const carrier = ctx.createOscillator()
   carrier.type = Math.random() > 0.5 ? 'sine' : 'triangle'
-  carrier.frequency.setValueAtTime(basePitch, time)
-  carrier.frequency.exponentialRampToValueAtTime(pitchDrop, time + 0.015)
+  carrier.frequency.setValueAtTime(applyFilter(basePitch), time)
+  carrier.frequency.exponentialRampToValueAtTime(applyFilter(pitchDrop), time + 0.015)
 
-  // Modulator - high ratio for metallic quality
+  // Modulator - FM ratio controls metallic quality
   const modulator = ctx.createOscillator()
   modulator.type = 'sine'
-  modulator.frequency.setValueAtTime(basePitch * 2.5, time)
+  modulator.frequency.setValueAtTime(basePitch * p.fmRatio, time)
   modulator.frequency.exponentialRampToValueAtTime(50, time + 0.01)
 
   const modGain = ctx.createGain()
@@ -389,8 +457,10 @@ function triggerPerc(ctx: AudioContext, time: number, velocity: number): void {
  * Accent - aggressive zap/glitch
  */
 function triggerAccent(ctx: AudioContext, time: number, velocity: number): void {
-  // Random character selection
-  const character = Math.random()
+  const p = synthParams.accent
+  // Random character selection - bias based on params
+  const character = (Math.random() + p.character) / 2
+  const decay = applyDecay(0.025)
   
   if (character < 0.4) {
     // Zap - resonant sweep
@@ -408,7 +478,7 @@ function triggerAccent(ctx: AudioContext, time: number, velocity: number): void 
     
     const gain = ctx.createGain()
     gain.gain.setValueAtTime(0.3 * velocity, time)
-    gain.gain.exponentialRampToValueAtTime(0.001, time + 0.025)
+    gain.gain.exponentialRampToValueAtTime(0.001, time + decay)
     
     osc.connect(filter)
     filter.connect(gain)
@@ -433,7 +503,7 @@ function triggerAccent(ctx: AudioContext, time: number, velocity: number): void 
     
     const gain = ctx.createGain()
     gain.gain.setValueAtTime(0.4 * velocity, time)
-    gain.gain.exponentialRampToValueAtTime(0.001, time + 0.02)
+    gain.gain.exponentialRampToValueAtTime(0.001, time + decay)
     
     noise.connect(filter)
     filter.connect(distortion)
@@ -441,7 +511,7 @@ function triggerAccent(ctx: AudioContext, time: number, velocity: number): void 
     gain.connect(drumBus!)
     
     noise.start(time)
-    noise.stop(time + 0.04)
+    noise.stop(time + decay + 0.02)
     
   } else {
     // Glitch click cluster

@@ -41,6 +41,27 @@ const MAX_VOICES = 12
 let currentWaveform: OscillatorType = 'triangle'
 let wavetablePosition = 0  // 0-100: sine(0) → triangle(33) → square(66) → saw(100)
 
+// Pitch slide settings
+let slideAmount = 45      // 0-100: semitones of slide (0 = off)
+let slideChance = 0.3     // 0-1: probability of slide on any note
+let slideUpBias = 0.5     // 0-1: 0 = always down, 0.5 = random, 1 = always up
+
+/**
+ * Set pitch slide parameters
+ */
+export function setSlideParams(amount: number, chance: number, upBias: number): void {
+  slideAmount = Math.max(0, Math.min(100, amount))
+  slideChance = Math.max(0, Math.min(1, chance))
+  slideUpBias = Math.max(0, Math.min(1, upBias))
+}
+
+/**
+ * Get current slide parameters
+ */
+export function getSlideParams(): { amount: number; chance: number; upBias: number } {
+  return { amount: slideAmount, chance: slideChance, upBias: slideUpBias }
+}
+
 // Waveform order for wavetable
 const WAVETABLE_ORDER: OscillatorType[] = ['sine', 'triangle', 'square', 'sawtooth']
 const WAVETABLE_POSITIONS = [0, 33, 66, 100]
@@ -166,6 +187,39 @@ export function playNote(params: Partial<VoiceParams> = {}): void {
     oscMixB = ctx.createGain()
     oscMixA.gain.value = Math.cos(blend * Math.PI / 2)
     oscMixB.gain.value = Math.sin(blend * Math.PI / 2)
+  }
+
+  // Apply pitch slide (probabilistic)
+  if (slideAmount > 0 && Math.random() < slideChance) {
+    // Determine direction: bias toward up or down
+    const goUp = Math.random() < slideUpBias
+    
+    // Calculate slide in semitones (scaled by amount, max ~12 semitones at 100)
+    const semitones = (slideAmount / 100) * 12 * (0.3 + Math.random() * 0.7)
+    const ratio = Math.pow(2, semitones / 12)
+    
+    // Slide duration based on attack time
+    const slideDuration = p.attack * (1.5 + Math.random() * 1.5)
+    
+    if (goUp) {
+      // Slide up: start low, ramp to target
+      const startFreq = p.frequency / ratio
+      osc.frequency.setValueAtTime(startFreq, now)
+      osc.frequency.exponentialRampToValueAtTime(p.frequency, now + slideDuration)
+      if (osc2) {
+        osc2.frequency.setValueAtTime(startFreq, now)
+        osc2.frequency.exponentialRampToValueAtTime(p.frequency, now + slideDuration)
+      }
+    } else {
+      // Slide down: start high, ramp to target
+      const startFreq = p.frequency * ratio
+      osc.frequency.setValueAtTime(startFreq, now)
+      osc.frequency.exponentialRampToValueAtTime(p.frequency, now + slideDuration)
+      if (osc2) {
+        osc2.frequency.setValueAtTime(startFreq, now)
+        osc2.frequency.exponentialRampToValueAtTime(p.frequency, now + slideDuration)
+      }
+    }
   }
 
   const filter = ctx.createBiquadFilter()

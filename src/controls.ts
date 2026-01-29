@@ -6,16 +6,17 @@ import { SnowflakeSystem } from './snowflake'
 import { setWindConfig } from './wind'
 import { setMusicConfig, type ScaleName } from './audio/music'
 import { setDelayTime, setDelayFeedback, setDelayMix, setReverbMix, setWarbleRate, setWarbleDepth, setWarbleMix, setWarbleRandom, setNoiseLevel, setCrackleLevel, setMasterVolume, setSynthVolume } from './audio/engine'
-import { setWavetablePosition } from './audio/voice'
+import { setWavetablePosition, setSlideParams } from './audio/voice'
 import { setScene, type SceneType } from './scene'
 import { setDroneEnabled } from './audio/drone'
 import { setDitherSize } from './renderer'
 import { 
   toggleStep, getPattern, clearPattern, setTempo, setSwing, 
   toggleSequencer, setStepCallback, setPatternCallback, 
-  applyFill, setEvolveMode, getEvolveMode, setStutter
+  applyFill, setEvolveMode, getEvolveMode, setStutter,
+  setStep, getStepValue
 } from './sequencer'
-import { setDrumVolume, setDrumTone } from './audio/drums'
+import { setDrumVolume, setDrumTone, randomizeDrums, resetDrums } from './audio/drums'
 
 // Theme management
 let currentTheme: 'dark' | 'light' = 'dark'
@@ -110,6 +111,22 @@ export function initControls(snowflakes: SnowflakeSystem): void {
     setMusicConfig({ reverbAmount: value })
     setReverbMix(value)  // Also control overall reverb level
   })
+
+  // Pitch slide controls
+  const slideAmountSlider = document.getElementById('slide-amount') as HTMLInputElement
+  const slideChanceSlider = document.getElementById('slide-chance') as HTMLInputElement
+  const slideDirectionSlider = document.getElementById('slide-direction') as HTMLInputElement
+  
+  const updateSlide = () => {
+    const amount = parseInt(slideAmountSlider.value, 10)
+    const chance = parseInt(slideChanceSlider.value, 10) / 100
+    const direction = parseInt(slideDirectionSlider.value, 10) / 100
+    setSlideParams(amount, chance, direction)
+  }
+  
+  slideAmountSlider.addEventListener('input', updateSlide)
+  slideChanceSlider.addEventListener('input', updateSlide)
+  slideDirectionSlider.addEventListener('input', updateSlide)
 
   // Drone toggle
   const droneToggle = document.getElementById('drone-toggle') as HTMLInputElement
@@ -246,6 +263,23 @@ const STEPS = 16
  * Initialize drum sequencer UI and controls
  */
 export function initSequencerControls(): void {
+  // Drag state for painting steps
+  let isDragging = false
+  let paintMode: 'add' | 'remove' | null = null
+  let dragStartStep: { track: number; step: number } | null = null
+  let hasDragged = false  // Track if we moved to a different step
+  
+  // Helper to update step button UI
+  const updateStepUI = (btn: HTMLButtonElement, subdiv: number) => {
+    btn.classList.toggle('active', subdiv > 0)
+    btn.setAttribute('data-subdiv', String(subdiv))
+  }
+  
+  // Helper to get step button by track/step
+  const getStepButton = (track: number, step: number): HTMLButtonElement | null => {
+    return document.querySelector(`.seq-step[data-track="${track}"][data-step="${step}"]`)
+  }
+  
   // Create step buttons for each track
   const tracks = document.querySelectorAll('.seq-track')
   tracks.forEach((track) => {
@@ -258,14 +292,133 @@ export function initSequencerControls(): void {
       btn.className = 'seq-step'
       btn.setAttribute('data-track', String(trackIndex))
       btn.setAttribute('data-step', String(step))
+      btn.setAttribute('data-subdiv', '0')
       
-      btn.addEventListener('click', () => {
-        const isActive = toggleStep(trackIndex, step)
-        btn.classList.toggle('active', isActive)
+      // Mousedown: start drag, determine paint mode
+      btn.addEventListener('mousedown', (e) => {
+        e.preventDefault()
+        isDragging = true
+        hasDragged = false
+        dragStartStep = { track: trackIndex, step }
+        
+        const currentValue = getStepValue(trackIndex, step)
+        if (currentValue === 0) {
+          // Empty step: we're adding
+          paintMode = 'add'
+          setStep(trackIndex, step, 1)
+          updateStepUI(btn, 1)
+        } else {
+          // Active step: we're removing (drag) or cycling (click)
+          paintMode = 'remove'
+        }
+      })
+      
+      // Mouseover during drag: paint
+      btn.addEventListener('mouseenter', () => {
+        if (!isDragging || !paintMode) return
+        
+        const currentValue = getStepValue(trackIndex, step)
+        hasDragged = true
+        
+        if (paintMode === 'add' && currentValue === 0) {
+          setStep(trackIndex, step, 1)
+          updateStepUI(btn, 1)
+        } else if (paintMode === 'remove' && currentValue > 0) {
+          setStep(trackIndex, step, 0)
+          updateStepUI(btn, 0)
+        }
       })
       
       stepsContainer.appendChild(btn)
     }
+  })
+  
+  // Global mouseup: end drag
+  document.addEventListener('mouseup', () => {
+    if (isDragging && dragStartStep && !hasDragged) {
+      // This was a click, not a drag
+      const { track, step } = dragStartStep
+      const btn = getStepButton(track, step)
+      if (btn && paintMode === 'remove') {
+        // Was active, cycle subdivision (or turn off if at max)
+        const newValue = toggleStep(track, step)
+        updateStepUI(btn, newValue)
+      }
+      // If paintMode was 'add', we already set it to 1 on mousedown
+    }
+    isDragging = false
+    paintMode = null
+    dragStartStep = null
+    hasDragged = false
+  })
+  
+  // Touch support
+  let touchTarget: HTMLButtonElement | null = null
+  
+  document.addEventListener('touchstart', (e) => {
+    const target = e.target as HTMLElement
+    if (!target.classList.contains('seq-step')) return
+    
+    e.preventDefault()
+    touchTarget = target as HTMLButtonElement
+    isDragging = true
+    hasDragged = false
+    
+    const trackIndex = parseInt(target.getAttribute('data-track') || '0', 10)
+    const step = parseInt(target.getAttribute('data-step') || '0', 10)
+    dragStartStep = { track: trackIndex, step }
+    
+    const currentValue = getStepValue(trackIndex, step)
+    if (currentValue === 0) {
+      paintMode = 'add'
+      setStep(trackIndex, step, 1)
+      updateStepUI(touchTarget, 1)
+    } else {
+      paintMode = 'remove'
+    }
+  }, { passive: false })
+  
+  document.addEventListener('touchmove', (e) => {
+    if (!isDragging || !paintMode) return
+    
+    const touch = e.touches[0]
+    if (!touch) return
+    
+    const element = document.elementFromPoint(touch.clientX, touch.clientY)
+    if (!element?.classList.contains('seq-step')) return
+    if (element === touchTarget) return  // Still on same step
+    
+    hasDragged = true
+    touchTarget = element as HTMLButtonElement
+    
+    const trackIndex = parseInt(element.getAttribute('data-track') || '0', 10)
+    const step = parseInt(element.getAttribute('data-step') || '0', 10)
+    const currentValue = getStepValue(trackIndex, step)
+    
+    if (paintMode === 'add' && currentValue === 0) {
+      setStep(trackIndex, step, 1)
+      updateStepUI(touchTarget, 1)
+    } else if (paintMode === 'remove' && currentValue > 0) {
+      setStep(trackIndex, step, 0)
+      updateStepUI(touchTarget, 0)
+    }
+  }, { passive: false })
+  
+  document.addEventListener('touchend', () => {
+    if (isDragging && dragStartStep && !hasDragged && paintMode === 'remove') {
+      // This was a tap on an active step - cycle subdivision
+      const { track, step } = dragStartStep
+      const btn = getStepButton(track, step)
+      if (btn) {
+        const newValue = toggleStep(track, step)
+        updateStepUI(btn, newValue)
+      }
+    }
+    isDragging = false
+    paintMode = null
+    dragStartStep = null
+    hasDragged = false
+    touchTarget = null
   })
 
   // Play button
@@ -461,6 +614,18 @@ export function initSequencerControls(): void {
     updateSequencerUI()
   })
 
+  // Randomize drum sounds
+  const randomizeBtn = document.getElementById('seq-randomize') as HTMLButtonElement
+  randomizeBtn.addEventListener('click', () => {
+    randomizeDrums()
+  })
+
+  // Reset drum sounds to defaults
+  const resetBtn = document.getElementById('seq-reset') as HTMLButtonElement
+  resetBtn.addEventListener('click', () => {
+    resetDrums()
+  })
+
   // Set up playhead callback
   setStepCallback((step) => {
     updatePlayhead(step)
@@ -482,7 +647,9 @@ function updateSequencerUI(): void {
   stepBtns.forEach((btn) => {
     const track = parseInt(btn.getAttribute('data-track') || '0', 10)
     const step = parseInt(btn.getAttribute('data-step') || '0', 10)
-    btn.classList.toggle('active', pattern[track]?.[step] ?? false)
+    const subdiv = pattern[track]?.[step] ?? 0
+    btn.classList.toggle('active', subdiv > 0)
+    btn.setAttribute('data-subdiv', String(subdiv))
   })
 }
 
