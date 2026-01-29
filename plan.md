@@ -68,25 +68,25 @@ phases 1–5 constitute MVP:
 
 ---
 
-### phase 3: audio system
+### phase 3: audio system ✓
 
 #### 3.1 web audio foundation
-- [ ] `AudioEngine` class
-- [ ] user-gesture-gated AudioContext creation
-- [ ] master gain node
-- [ ] global reverb send (ConvolverNode or simple feedback delay)
+- [x] `AudioEngine` class
+- [x] user-gesture-gated AudioContext creation
+- [x] master gain node
+- [x] global reverb send (ConvolverNode or simple feedback delay)
 
 #### 3.2 synthesis voices
-- [ ] simple voice: oscillator → filter → envelope → gain
-- [ ] voice pool (polyphony limit ~8-12)
-- [ ] attack/release envelope shaping
-- [ ] filter modulation for timbral variation
+- [x] simple voice: oscillator → filter → envelope → gain
+- [x] voice pool (polyphony limit ~8-12)
+- [x] attack/release envelope shaping
+- [x] filter modulation for timbral variation
 
 #### 3.3 musical logic
-- [ ] scale/mode system (e.g., pentatonic, dorian, lydian)
-- [ ] note selection from bounded pitch range
-- [ ] rhythm density control (events per minute)
-- [ ] occasional octave shifts, passing tones
+- [x] scale/mode system (e.g., pentatonic, dorian, lydian)
+- [x] note selection from bounded pitch range
+- [x] rhythm density control (events per minute)
+- [x] occasional octave shifts, passing tones
 
 ---
 

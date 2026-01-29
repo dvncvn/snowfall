@@ -1,11 +1,15 @@
 import { createCanvas } from './canvas'
-import { SnowflakeSystem } from './snowflake'
+import { SnowflakeSystem, Snowflake } from './snowflake'
 import { updateWind } from './wind'
 import { reseedNoise } from './utils'
+import { initAudio, resumeAudio, isAudioReady } from './audio/engine'
+import { triggerNote } from './audio/music'
+import { stopAllVoices } from './audio/voice'
 
 // state
 let isPlaying = false
 let animationId: number | null = null
+let audioInitialized = false
 
 // elements
 const canvas = document.getElementById('canvas') as HTMLCanvasElement
@@ -16,12 +20,41 @@ const sidebar = document.getElementById('sidebar') as HTMLElement
 const { ctx, resize: resizeCanvas } = createCanvas(canvas)
 
 // snowflake system
-const snowflakes = new SnowflakeSystem()
+const snowflakes = new SnowflakeSystem({
+  density: 25  // slightly lower for cleaner sound
+})
+
+// track flakes that have triggered notes
+const triggeredFlakes = new WeakSet<Snowflake>()
 
 // resize handler
 function resize() {
   resizeCanvas()
   snowflakes.resize(window.innerWidth, window.innerHeight)
+}
+
+// trigger notes from new flakes
+function processAudioTriggers(flakes: readonly Snowflake[]) {
+  if (!isAudioReady()) return
+
+  const width = window.innerWidth
+  const height = window.innerHeight
+
+  for (const flake of flakes) {
+    // Only trigger once per flake, when it reaches ~20% down the screen
+    if (triggeredFlakes.has(flake)) continue
+    if (flake.y < height * 0.15) continue
+    if (flake.opacity < 0.3) continue
+
+    triggeredFlakes.add(flake)
+
+    // Normalize position
+    const x = flake.x / width
+    const y = flake.y / height
+    const size = (flake.size - 1.5) / 2.5  // normalize based on min/max size
+
+    triggerNote(x, y, size)
+  }
 }
 
 // animation loop
@@ -54,13 +87,24 @@ function render(time: number) {
   
   ctx.globalAlpha = 1
 
+  // process audio triggers
+  processAudioTriggers(flakes)
+
   if (isPlaying) {
     animationId = requestAnimationFrame(render)
   }
 }
 
-function start() {
+async function start() {
   if (isPlaying) return
+
+  // Initialize audio on first start (requires user gesture)
+  if (!audioInitialized) {
+    await initAudio()
+    audioInitialized = true
+  }
+  await resumeAudio()
+
   isPlaying = true
   lastTime = 0
   animationId = requestAnimationFrame(render)
@@ -73,6 +117,7 @@ function stop() {
     cancelAnimationFrame(animationId)
     animationId = null
   }
+  stopAllVoices()
   updatePlayButton()
 }
 
