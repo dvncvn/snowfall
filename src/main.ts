@@ -7,8 +7,8 @@ import { triggerNote } from './audio/music'
 import { stopAllVoices } from './audio/voice'
 import { startDrones, stopDrones } from './audio/drone'
 import { updateEvolution, setDensityCallback, resetEvolution, setWindUserOverride } from './evolution'
-import { renderFlakes, toggleRenderMode } from './renderer'
-import { initControls, toggleTheme, syncRenderModeUI } from './controls'
+import { renderFlakes } from './renderer'
+import { initControls, toggleTheme } from './controls'
 import { renderScene } from './scene'
 
 // state
@@ -184,10 +184,6 @@ document.addEventListener('keydown', (e) => {
       break
     case 'r':
       reseed()
-      break
-    case 'p':
-      toggleRenderMode()
-      syncRenderModeUI()
       break
     case 'd':
       toggleTheme()

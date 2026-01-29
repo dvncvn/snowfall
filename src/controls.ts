@@ -5,8 +5,7 @@
 import { SnowflakeSystem } from './snowflake'
 import { setWindConfig } from './wind'
 import { setMusicConfig, type ScaleName } from './audio/music'
-import { setRenderMode, getRenderMode, type RenderMode } from './renderer'
-import { setDelayTime, setDelayFeedback, setDelayMix } from './audio/engine'
+import { setDelayTime, setDelayFeedback, setDelayMix, setReverbMix, setWarbleRate, setWarbleDepth, setWarbleMix, setNoiseLevel, setCrackleLevel, setMasterVolume } from './audio/engine'
 import { setWavetablePosition } from './audio/voice'
 import { setScene, type SceneType } from './scene'
 import { setDroneEnabled } from './audio/drone'
@@ -52,14 +51,6 @@ export function initControls(snowflakes: SnowflakeSystem): void {
     setMusicConfig({ scale: value })
   })
 
-  // Render mode select
-  const renderSelect = document.getElementById('render-select') as HTMLSelectElement
-  renderSelect.value = getRenderMode()
-  renderSelect.addEventListener('change', () => {
-    const value = renderSelect.value as RenderMode
-    setRenderMode(value)
-  })
-
   // Scene select
   const sceneSelect = document.getElementById('scene-select') as HTMLSelectElement
   sceneSelect.addEventListener('change', () => {
@@ -92,6 +83,7 @@ export function initControls(snowflakes: SnowflakeSystem): void {
   reverbSlider.addEventListener('input', () => {
     const value = parseInt(reverbSlider.value, 10) / 100
     setMusicConfig({ reverbAmount: value })
+    setReverbMix(value)  // Also control overall reverb level
   })
 
   // Drone toggle
@@ -117,6 +109,45 @@ export function initControls(snowflakes: SnowflakeSystem): void {
   delayMixSlider.addEventListener('input', () => {
     const value = parseInt(delayMixSlider.value, 10) / 100
     setDelayMix(value)
+  })
+
+  // Tape warble controls
+  const warbleRateSlider = document.getElementById('warble-rate') as HTMLInputElement
+  warbleRateSlider.addEventListener('input', () => {
+    const value = parseInt(warbleRateSlider.value, 10) / 100
+    setWarbleRate(value)
+  })
+
+  const warbleDepthSlider = document.getElementById('warble-depth') as HTMLInputElement
+  warbleDepthSlider.addEventListener('input', () => {
+    const value = parseInt(warbleDepthSlider.value, 10) / 100
+    setWarbleDepth(value)
+  })
+
+  const warbleMixSlider = document.getElementById('warble-mix') as HTMLInputElement
+  warbleMixSlider.addEventListener('input', () => {
+    const value = parseInt(warbleMixSlider.value, 10) / 100
+    setWarbleMix(value)
+  })
+
+  // Noise controls
+  const noiseLevelSlider = document.getElementById('noise-level') as HTMLInputElement
+  noiseLevelSlider.addEventListener('input', () => {
+    const value = parseInt(noiseLevelSlider.value, 10) / 100
+    setNoiseLevel(value)
+  })
+
+  const crackleLevelSlider = document.getElementById('crackle-level') as HTMLInputElement
+  crackleLevelSlider.addEventListener('input', () => {
+    const value = parseInt(crackleLevelSlider.value, 10) / 100
+    setCrackleLevel(value)
+  })
+
+  // Master volume (near play button)
+  const masterVolumeSlider = document.getElementById('master-volume') as HTMLInputElement
+  masterVolumeSlider.addEventListener('input', () => {
+    const value = parseInt(masterVolumeSlider.value, 10) / 100
+    setMasterVolume(value)
   })
 
   // Reseed button
@@ -167,15 +198,6 @@ function updateThemeIcon(): void {
   }
 }
 
-/**
- * Sync UI controls with current state
- */
-export function syncRenderModeUI(): void {
-  const renderSelect = document.getElementById('render-select') as HTMLSelectElement
-  if (renderSelect) {
-    renderSelect.value = getRenderMode()
-  }
-}
 
 /**
  * Get current theme

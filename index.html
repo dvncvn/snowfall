@@ -45,14 +45,6 @@
         </div>
         
         <div class="control-group">
-          <label for="render-select">style</label>
-          <select id="render-select">
-            <option value="soft">soft</option>
-            <option value="pixel" selected>pixel</option>
-          </select>
-        </div>
-        
-        <div class="control-group">
           <label for="scene-select">scene</label>
           <select id="scene-select">
             <option value="none" selected>none</option>
@@ -115,6 +107,37 @@
           <label for="delay-mix">mix</label>
           <input type="range" id="delay-mix" min="0" max="100" value="30" />
         </div>
+
+        <div class="control-divider"></div>
+        <div class="control-label">tape</div>
+        
+        <div class="control-group">
+          <label for="warble-rate">rate</label>
+          <input type="range" id="warble-rate" min="0" max="100" value="20" />
+        </div>
+        
+        <div class="control-group">
+          <label for="warble-depth">depth</label>
+          <input type="range" id="warble-depth" min="0" max="100" value="30" />
+        </div>
+        
+        <div class="control-group">
+          <label for="warble-mix">mix</label>
+          <input type="range" id="warble-mix" min="0" max="100" value="50" />
+        </div>
+
+        <div class="control-divider"></div>
+        <div class="control-label">noise</div>
+        
+        <div class="control-group">
+          <label for="noise-level">hiss</label>
+          <input type="range" id="noise-level" min="0" max="100" value="25" />
+        </div>
+        
+        <div class="control-group">
+          <label for="crackle-level">crackle</label>
+          <input type="range" id="crackle-level" min="0" max="100" value="30" />
+        </div>
         
         <div class="control-row">
           <button id="reseed-btn" class="control-btn">reseed</button>
@@ -127,15 +150,18 @@
       </div>
       
       <div class="sidebar-footer">
-        <span class="hint">h hide · r reseed · p pixel</span>
+        <span class="hint">h hide · r reseed</span>
       </div>
     </aside>
 
-    <button id="start-btn" class="start-btn" aria-label="Start">
-      <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor" style="image-rendering: pixelated">
-        <polygon points="4,2 4,14 13,8" />
-      </svg>
-    </button>
+    <div class="player-controls">
+      <input type="range" id="master-volume" class="volume-slider" min="0" max="100" value="70" aria-label="Volume" />
+      <button id="start-btn" class="start-btn" aria-label="Start">
+        <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor" style="image-rendering: pixelated">
+          <polygon points="4,2 4,14 13,8" />
+        </svg>
+      </button>
+    </div>
 
     <script type="module" src="/src/main.ts"></script>
   </body>
