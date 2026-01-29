@@ -440,7 +440,7 @@ select:focus {
   display: flex;
   flex-direction: row;
   gap: 12px;
-  align-items: flex-start;
+  align-items: stretch;
   pointer-events: none;
 }
 
@@ -455,19 +455,19 @@ select:focus {
 .seq-grid {
   display: flex;
   flex-direction: column;
-  gap: 1px;
+  gap: 2px;
 }
 
 .seq-track {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 6px;
 }
 
 .seq-label {
-  width: 14px;
+  width: 16px;
   font-family: var(--font-mono);
-  font-size: 8px;
+  font-size: 9px;
   color: var(--fg-muted);
   text-align: right;
   opacity: 0.6;
@@ -475,12 +475,12 @@ select:focus {
 
 .seq-steps {
   display: flex;
-  gap: 1px;
+  gap: 2px;
 }
 
 .seq-step {
-  width: 14px;
-  height: 14px;
+  width: 18px;
+  height: 18px;
   background: transparent;
   border: 1px solid var(--border);
   cursor: pointer;
@@ -582,8 +582,8 @@ select:focus {
 
 /* X/Y Pad for stutter control */
 .seq-xy-pad {
-  width: 100px;
   align-self: stretch;
+  aspect-ratio: 1;
   border: 1px solid var(--border);
   position: relative;
   cursor: crosshair;
@@ -622,8 +622,8 @@ select:focus {
 
 .seq-xy-label-x {
   position: absolute;
-  bottom: 2px;
-  right: 3px;
+  bottom: 3px;
+  right: 4px;
   font-family: var(--font-mono);
   font-size: 7px;
   color: var(--fg-muted);
@@ -632,12 +632,22 @@ select:focus {
 
 .seq-xy-label-y {
   position: absolute;
-  top: 2px;
-  left: 3px;
+  top: 3px;
+  left: 4px;
   font-family: var(--font-mono);
   font-size: 7px;
   color: var(--fg-muted);
   opacity: 0.5;
+}
+
+.seq-xy-title {
+  position: absolute;
+  top: 3px;
+  right: 4px;
+  font-family: var(--font-mono);
+  font-size: 8px;
+  color: var(--fg);
+  opacity: 0.4;
 }
 
 /* Player controls stay in corner - sequencer is now minimal overlay */

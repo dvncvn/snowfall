@@ -15,7 +15,7 @@ import {
   toggleSequencer, setStepCallback, setPatternCallback, 
   applyFill, setEvolveMode, getEvolveMode, setStutter
 } from './sequencer'
-import { setDrumVolume } from './audio/drums'
+import { setDrumVolume, setDrumTone } from './audio/drums'
 
 // Theme management
 let currentTheme: 'dark' | 'light' = 'dark'
@@ -298,6 +298,16 @@ export function initSequencerControls(): void {
   const stutterLineV = document.getElementById('seq-stutter-line-v') as HTMLDivElement
   let isDraggingStutter = false
 
+  // Make X/Y pad 1:1 ratio matching sequencer height
+  const resizeXYPad = () => {
+    const height = stutterPad.offsetHeight
+    if (height > 0) {
+      stutterPad.style.width = `${height}px`
+    }
+  }
+  resizeXYPad()
+  window.addEventListener('resize', resizeXYPad)
+
   const updateStutter = (e: MouseEvent | Touch) => {
     const rect = stutterPad.getBoundingClientRect()
     const x = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width))
@@ -348,6 +358,78 @@ export function initSequencerControls(): void {
   stutterPad.addEventListener('touchend', () => {
     isDraggingStutter = false
     stutterPad.classList.remove('active')
+  })
+
+  // Tone X/Y pad with crosshair lines
+  const tonePad = document.getElementById('seq-tone-pad') as HTMLDivElement
+  const toneLineH = document.getElementById('seq-tone-line-h') as HTMLDivElement
+  const toneLineV = document.getElementById('seq-tone-line-v') as HTMLDivElement
+  let isDraggingTone = false
+
+  // Initialize tone pad at center (0.5, 0.5)
+  toneLineV.style.left = '50%'
+  toneLineH.style.top = '50%'
+
+  const updateTone = (e: MouseEvent | Touch) => {
+    const rect = tonePad.getBoundingClientRect()
+    const x = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width))
+    const y = Math.max(0, Math.min(1, 1 - (e.clientY - rect.top) / rect.height))
+    
+    // Update crosshair lines
+    toneLineV.style.left = `${x * 100}%`
+    toneLineH.style.top = `${(1 - y) * 100}%`
+    
+    // Update tone params (x = filter, y = decay)
+    setDrumTone(x, y)
+  }
+
+  // Make tone X/Y pad 1:1 ratio
+  const resizeTonePad = () => {
+    const height = tonePad.offsetHeight
+    if (height > 0) {
+      tonePad.style.width = `${height}px`
+    }
+  }
+  resizeTonePad()
+  window.addEventListener('resize', resizeTonePad)
+
+  tonePad.addEventListener('mousedown', (e) => {
+    isDraggingTone = true
+    tonePad.classList.add('active')
+    updateTone(e)
+  })
+
+  document.addEventListener('mousemove', (e) => {
+    if (isDraggingTone) {
+      updateTone(e)
+    }
+  })
+
+  document.addEventListener('mouseup', () => {
+    if (isDraggingTone) {
+      isDraggingTone = false
+      tonePad.classList.remove('active')
+    }
+  })
+
+  // Touch support for tone pad
+  tonePad.addEventListener('touchstart', (e) => {
+    isDraggingTone = true
+    tonePad.classList.add('active')
+    if (e.touches[0]) updateTone(e.touches[0])
+    e.preventDefault()
+  })
+
+  tonePad.addEventListener('touchmove', (e) => {
+    if (isDraggingTone && e.touches[0]) {
+      updateTone(e.touches[0])
+      e.preventDefault()
+    }
+  })
+
+  tonePad.addEventListener('touchend', () => {
+    isDraggingTone = false
+    tonePad.classList.remove('active')
   })
 
   // Evolve button (toggle)
