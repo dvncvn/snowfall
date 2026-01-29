@@ -4,6 +4,7 @@
 
 let audioContext: AudioContext | null = null
 let masterGain: GainNode | null = null
+let synthGain: GainNode | null = null  // Controls synth/snowfall volume
 let reverbGain: GainNode | null = null
 let reverbNode: ConvolverNode | null = null
 let dryGain: GainNode | null = null
@@ -42,6 +43,10 @@ export async function initAudio(): Promise<void> {
   masterGain = audioContext.createGain()
   masterGain.gain.value = 0.5
   masterGain.connect(audioContext.destination)
+
+  // Synth gain (controls snowfall synth volume, separate from drums)
+  synthGain = audioContext.createGain()
+  synthGain.gain.value = 0.7
 
   // Dry path (will be routed through warble later)
   dryGain = audioContext.createGain()
@@ -212,11 +217,27 @@ export function getReverbNode(): GainNode | null {
 }
 
 /**
+ * Get synth gain node for routing synth voices
+ */
+export function getSynthGain(): GainNode | null {
+  return synthGain
+}
+
+/**
  * Set master volume (0-1)
  */
 export function setMasterVolume(volume: number): void {
   if (masterGain) {
     masterGain.gain.setTargetAtTime(volume, audioContext!.currentTime, 0.1)
+  }
+}
+
+/**
+ * Set synth/snowfall volume (separate from drums)
+ */
+export function setSynthVolume(volume: number): void {
+  if (synthGain && audioContext) {
+    synthGain.gain.setTargetAtTime(volume, audioContext.currentTime, 0.1)
   }
 }
 

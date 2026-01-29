@@ -5,7 +5,7 @@
 import { SnowflakeSystem } from './snowflake'
 import { setWindConfig } from './wind'
 import { setMusicConfig, type ScaleName } from './audio/music'
-import { setDelayTime, setDelayFeedback, setDelayMix, setReverbMix, setWarbleRate, setWarbleDepth, setWarbleMix, setWarbleRandom, setNoiseLevel, setCrackleLevel, setMasterVolume } from './audio/engine'
+import { setDelayTime, setDelayFeedback, setDelayMix, setReverbMix, setWarbleRate, setWarbleDepth, setWarbleMix, setWarbleRandom, setNoiseLevel, setCrackleLevel, setMasterVolume, setSynthVolume } from './audio/engine'
 import { setWavetablePosition } from './audio/voice'
 import { setScene, type SceneType } from './scene'
 import { setDroneEnabled } from './audio/drone'
@@ -75,6 +75,13 @@ export function initControls(snowflakes: SnowflakeSystem): void {
       setScene(value)
     })
   }
+
+  // Synth volume slider (separate from drums)
+  const synthVolumeSlider = document.getElementById('synth-volume') as HTMLInputElement
+  synthVolumeSlider.addEventListener('input', () => {
+    const value = parseInt(synthVolumeSlider.value, 10) / 100
+    setSynthVolume(value)
+  })
 
   // Wavetable slider
   const wavetableSlider = document.getElementById('wavetable-slider') as HTMLInputElement

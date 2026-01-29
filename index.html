@@ -49,8 +49,9 @@
           <label for="dither-select">dither</label>
           <select id="dither-select">
             <option value="0">none</option>
-            <option value="4" selected>4px</option>
+            <option value="4">4px</option>
             <option value="8">8px</option>
+            <option value="12" selected>12px</option>
             <option value="16">16px</option>
           </select>
         </div>
@@ -81,6 +82,11 @@
 
         <div class="control-divider"></div>
         <div class="control-label">synth</div>
+
+        <div class="control-group">
+          <label for="synth-volume">volume</label>
+          <input type="range" id="synth-volume" min="0" max="100" value="70" />
+        </div>
 
         <div class="control-group wavetable-group">
           <label for="wavetable-slider">wave</label>
@@ -253,8 +259,10 @@
     <div class="player-controls">
       <input type="range" id="master-volume" class="volume-slider" min="0" max="100" value="70" aria-label="Volume" />
       <button id="start-btn" class="start-btn" aria-label="Start">
-        <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor" style="image-rendering: pixelated">
-          <polygon points="4,2 4,14 13,8" />
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
+          <rect x="4" y="2" width="3" height="12" />
+          <rect x="7" y="4" width="3" height="8" />
+          <rect x="10" y="6" width="3" height="4" />
         </svg>
       </button>
     </div>

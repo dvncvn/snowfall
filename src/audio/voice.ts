@@ -2,7 +2,7 @@
  * Synth voice with oscillator, filter, and envelope
  */
 
-import { getAudioContext, getDryNode, getReverbNode, getDelayNode } from './engine'
+import { getAudioContext, getDryNode, getReverbNode, getDelayNode, getSynthGain } from './engine'
 
 export interface VoiceParams {
   frequency: number
@@ -120,8 +120,9 @@ export function playNote(params: Partial<VoiceParams> = {}): void {
   const dryNode = getDryNode()
   const reverbNode = getReverbNode()
   const delayNode = getDelayNode()
+  const synthGain = getSynthGain()
   
-  if (!ctx || !dryNode || !reverbNode) return
+  if (!ctx || !dryNode || !reverbNode || !synthGain) return
 
   const p = { ...defaultParams, ...params }
   const now = ctx.currentTime
@@ -192,25 +193,27 @@ export function playNote(params: Partial<VoiceParams> = {}): void {
   filter.connect(gain)
   gain.connect(panner)
   
-  // Split to dry, reverb, and delay
+  // Route through synth gain for volume control, then split to dry, reverb, and delay
+  panner.connect(synthGain)
+  
   const dryAmount = 1 - p.reverbSend * 0.5
   const wetAmount = p.reverbSend
   
   const drySend = ctx.createGain()
   drySend.gain.value = dryAmount
-  panner.connect(drySend)
+  synthGain.connect(drySend)
   drySend.connect(dryNode)
   
   const wetSend = ctx.createGain()
   wetSend.gain.value = wetAmount
-  panner.connect(wetSend)
+  synthGain.connect(wetSend)
   wetSend.connect(reverbNode)
 
   // Send to delay (uses same send amount as reverb)
   if (delayNode) {
     const delaySend = ctx.createGain()
     delaySend.gain.value = wetAmount * 0.7
-    panner.connect(delaySend)
+    synthGain.connect(delaySend)
     delaySend.connect(delayNode)
   }
 

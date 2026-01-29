@@ -243,7 +243,7 @@ export function renderFlakes(
 }
 
 // Dither settings
-let ditherSize = 4  // 0 = off, 4, 8, or 16
+let ditherSize = 12  // 0 = off, 4, 8, 12, or 16
 
 export function setDitherSize(size: number): void {
   ditherSize = size

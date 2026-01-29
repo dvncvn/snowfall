@@ -256,14 +256,16 @@ function reseed() {
 }
 
 function updatePlayButton() {
-  // Pixel art style icons
+  // Pixel art style icons - stepped triangle for play, bars for pause
   startBtn.innerHTML = isPlaying
-    ? `<svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor" style="image-rendering: pixelated">
+    ? `<svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
         <rect x="3" y="2" width="4" height="12" />
         <rect x="9" y="2" width="4" height="12" />
       </svg>`
-    : `<svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor" style="image-rendering: pixelated">
-        <polygon points="4,2 4,14 13,8" />
+    : `<svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
+        <rect x="4" y="2" width="3" height="12" />
+        <rect x="7" y="4" width="3" height="8" />
+        <rect x="10" y="6" width="3" height="4" />
       </svg>`
   startBtn.classList.toggle('playing', isPlaying)
 }
