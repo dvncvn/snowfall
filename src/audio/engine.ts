@@ -20,6 +20,8 @@ let warbleLFO: OscillatorNode | null = null
 let warbleDepth: GainNode | null = null
 let warbleMix: GainNode | null = null
 let warbleDry: GainNode | null = null
+let warbleRandomEnabled = false
+let warbleRandomInterval: number | null = null
 
 // Noise/crackle effect
 let noiseNode: AudioBufferSourceNode | null = null
@@ -310,6 +312,40 @@ export function setWarbleMix(mix: number): void {
   if (warbleMix && warbleDry && audioContext) {
     warbleMix.gain.setTargetAtTime(mix, audioContext.currentTime, 0.1)
     warbleDry.gain.setTargetAtTime(1 - mix, audioContext.currentTime, 0.1)
+  }
+}
+
+/**
+ * Enable/disable random warble modulation
+ */
+export function setWarbleRandom(enabled: boolean): void {
+  warbleRandomEnabled = enabled
+  
+  if (enabled) {
+    // Start random modulation
+    const randomize = () => {
+      if (!warbleRandomEnabled || !warbleLFO || !warbleDepth || !audioContext) return
+      
+      // Random rate: 0.2 - 3 Hz
+      const rate = 0.2 + Math.random() * 2.8
+      warbleLFO.frequency.setTargetAtTime(rate, audioContext.currentTime, 0.5)
+      
+      // Random depth: 0.001 - 0.006
+      const depth = 0.001 + Math.random() * 0.005
+      warbleDepth.gain.setTargetAtTime(depth, audioContext.currentTime, 0.5)
+      
+      // Schedule next randomization (2-6 seconds)
+      const nextTime = 2000 + Math.random() * 4000
+      warbleRandomInterval = window.setTimeout(randomize, nextTime)
+    }
+    
+    randomize()
+  } else {
+    // Stop random modulation
+    if (warbleRandomInterval !== null) {
+      clearTimeout(warbleRandomInterval)
+      warbleRandomInterval = null
+    }
   }
 }
 

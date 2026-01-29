@@ -5,7 +5,7 @@
 import { SnowflakeSystem } from './snowflake'
 import { setWindConfig } from './wind'
 import { setMusicConfig, type ScaleName } from './audio/music'
-import { setDelayTime, setDelayFeedback, setDelayMix, setReverbMix, setWarbleRate, setWarbleDepth, setWarbleMix, setNoiseLevel, setCrackleLevel, setMasterVolume } from './audio/engine'
+import { setDelayTime, setDelayFeedback, setDelayMix, setReverbMix, setWarbleRate, setWarbleDepth, setWarbleMix, setWarbleRandom, setNoiseLevel, setCrackleLevel, setMasterVolume } from './audio/engine'
 import { setWavetablePosition } from './audio/voice'
 import { setScene, type SceneType } from './scene'
 import { setDroneEnabled } from './audio/drone'
@@ -130,6 +130,11 @@ export function initControls(snowflakes: SnowflakeSystem): void {
   warbleMixSlider.addEventListener('input', () => {
     const value = parseInt(warbleMixSlider.value, 10) / 100
     setWarbleMix(value)
+  })
+
+  const warbleRandomToggle = document.getElementById('warble-random') as HTMLInputElement
+  warbleRandomToggle.addEventListener('change', () => {
+    setWarbleRandom(warbleRandomToggle.checked)
   })
 
   // Noise controls

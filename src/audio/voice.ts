@@ -39,7 +39,7 @@ const MAX_VOICES = 12
 
 // Global synth settings
 let currentWaveform: OscillatorType = 'triangle'
-let wavetablePosition = 33  // 0-100: sine(0) → triangle(33) → square(66) → saw(100)
+let wavetablePosition = 0  // 0-100: sine(0) → triangle(33) → square(66) → saw(100)
 
 // Waveform order for wavetable
 const WAVETABLE_ORDER: OscillatorType[] = ['sine', 'triangle', 'square', 'sawtooth']
@@ -52,7 +52,7 @@ export function setWaveform(type: OscillatorType): void {
   currentWaveform = type
   // Sync wavetable position
   const idx = WAVETABLE_ORDER.indexOf(type)
-  if (idx >= 0) wavetablePosition = WAVETABLE_POSITIONS[idx] ?? 33
+  if (idx >= 0) wavetablePosition = WAVETABLE_POSITIONS[idx] ?? 0
 }
 
 /**
