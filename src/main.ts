@@ -15,11 +15,13 @@ import { renderScene } from './scene'
 let isPlaying = false
 let animationId: number | null = null
 let audioInitialized = false
+let introComplete = false
 
 // elements
 const canvas = document.getElementById('canvas') as HTMLCanvasElement
 const startBtn = document.getElementById('start-btn') as HTMLButtonElement
 const sidebar = document.getElementById('sidebar') as HTMLElement
+const intro = document.getElementById('intro') as HTMLElement
 
 // canvas context
 const { ctx, resize: resizeCanvas } = createCanvas(canvas)
@@ -100,20 +102,29 @@ function render(time: number) {
   }
 }
 
-async function start() {
+// Start visuals only (no audio)
+function startVisuals() {
   if (isPlaying) return
+  isPlaying = true
+  lastTime = 0
+  animationId = requestAnimationFrame(render)
+}
 
-  // Initialize audio on first start (requires user gesture)
+// Start audio (requires user gesture)
+async function startAudio() {
   if (!audioInitialized) {
     await initAudio()
     audioInitialized = true
   }
   await resumeAudio()
-
-  isPlaying = true
-  lastTime = 0
-  animationId = requestAnimationFrame(render)
   startDrones()
+}
+
+async function start() {
+  if (isPlaying) return
+
+  startVisuals()
+  await startAudio()
   updatePlayButton()
 }
 
@@ -195,6 +206,9 @@ document.addEventListener('keydown', (e) => {
 resize()
 initControls(snowflakes)
 
+// Ensure sidebar starts hidden
+sidebar.classList.add('hidden')
+
 // Respect reduced motion preference
 if (prefersReducedMotion()) {
   snowflakes.setConfig({ density: 10, minSpeed: 10, maxSpeed: 30 })
@@ -206,4 +220,40 @@ requestAnimationFrame(() => {
     .getPropertyValue('--bg')
     .trim()
   ctx.fillRect(0, 0, canvas.width, canvas.height)
+})
+
+// Intro sequence
+function skipIntro(withAudio = false) {
+  if (introComplete) return
+  introComplete = true
+  
+  intro.classList.add('fade-out')
+  
+  // Start visuals after fade begins
+  setTimeout(() => {
+    startVisuals()
+    if (withAudio) {
+      startAudio()
+    }
+    updatePlayButton()
+  }, 500)
+  
+  // Remove intro element after fade completes
+  setTimeout(() => {
+    intro.classList.add('hidden')
+  }, 1500)
+}
+
+// Auto-advance intro after delay (visuals only, no audio)
+setTimeout(() => {
+  skipIntro(false)
+}, 4500)
+
+// Allow click/key to skip intro early (with audio since it's a user gesture)
+intro.addEventListener('click', () => skipIntro(true))
+document.addEventListener('keydown', (e) => {
+  if (!introComplete && (e.key === ' ' || e.key === 'Enter')) {
+    e.preventDefault()
+    skipIntro(true)
+  }
 })

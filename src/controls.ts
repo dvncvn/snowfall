@@ -15,7 +15,7 @@ let currentTheme: 'dark' | 'light' = 'dark'
 
 // Base sizes for scaling
 const BASE_MIN_SIZE = 2
-const BASE_MAX_SIZE = 8
+const BASE_MAX_SIZE = 12
 
 export function initControls(snowflakes: SnowflakeSystem): void {
   // Density slider
@@ -51,12 +51,14 @@ export function initControls(snowflakes: SnowflakeSystem): void {
     setMusicConfig({ scale: value })
   })
 
-  // Scene select
-  const sceneSelect = document.getElementById('scene-select') as HTMLSelectElement
-  sceneSelect.addEventListener('change', () => {
-    const value = sceneSelect.value as SceneType
-    setScene(value)
-  })
+  // Scene select (hidden for now)
+  const sceneSelect = document.getElementById('scene-select') as HTMLSelectElement | null
+  if (sceneSelect) {
+    sceneSelect.addEventListener('change', () => {
+      const value = sceneSelect.value as SceneType
+      setScene(value)
+    })
+  }
 
   // Wavetable slider
   const wavetableSlider = document.getElementById('wavetable-slider') as HTMLInputElement

@@ -11,8 +11,20 @@
   </head>
   <body>
     <canvas id="canvas"></canvas>
+
+    <div id="intro" class="intro">
+      <div class="intro-content">
+        <h1 class="intro-title">snowfall</h1>
+        <div class="intro-controls">
+          <div><span>space</span> play/pause</div>
+          <div><span>h</span> sidebar</div>
+          <div><span>r</span> reseed</div>
+          <div><span>d</span> theme</div>
+        </div>
+      </div>
+    </div>
     
-    <aside id="sidebar" class="sidebar">
+    <aside id="sidebar" class="sidebar hidden">
       <div class="sidebar-header">
         <h1>snowfall</h1>
       </div>
@@ -24,7 +36,7 @@
         
         <div class="control-group">
           <label for="size-slider">size</label>
-          <input type="range" id="size-slider" min="50" max="300" value="100" />
+          <input type="range" id="size-slider" min="50" max="800" value="100" />
         </div>
         
         <div class="control-group">
@@ -44,6 +56,7 @@
           </select>
         </div>
         
+        <!-- scene control hidden for now
         <div class="control-group">
           <label for="scene-select">scene</label>
           <select id="scene-select">
@@ -53,6 +66,7 @@
             <option value="forest">forest</option>
           </select>
         </div>
+        -->
 
         <div class="control-divider"></div>
         <div class="control-label">synth</div>
