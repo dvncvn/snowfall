@@ -26,6 +26,7 @@ const defaultParams: VoiceParams = {
 
 interface Voice {
   osc: OscillatorNode
+  osc2?: OscillatorNode  // Second oscillator for wavetable morphing
   filter: BiquadFilterNode
   gain: GainNode
   panner: StereoPannerNode
@@ -35,6 +36,81 @@ interface Voice {
 
 const voices: Voice[] = []
 const MAX_VOICES = 12
+
+// Global synth settings
+let currentWaveform: OscillatorType = 'triangle'
+let wavetablePosition = 33  // 0-100: sine(0) → triangle(33) → square(66) → saw(100)
+
+// Waveform order for wavetable
+const WAVETABLE_ORDER: OscillatorType[] = ['sine', 'triangle', 'square', 'sawtooth']
+const WAVETABLE_POSITIONS = [0, 33, 66, 100]
+
+/**
+ * Set waveform type (discrete)
+ */
+export function setWaveform(type: OscillatorType): void {
+  currentWaveform = type
+  // Sync wavetable position
+  const idx = WAVETABLE_ORDER.indexOf(type)
+  if (idx >= 0) wavetablePosition = WAVETABLE_POSITIONS[idx] ?? 33
+}
+
+/**
+ * Get current waveform
+ */
+export function getWaveform(): OscillatorType {
+  return currentWaveform
+}
+
+/**
+ * Set wavetable position (0-100)
+ * Morphs between: sine(0) → triangle(33) → square(66) → sawtooth(100)
+ */
+export function setWavetablePosition(pos: number): void {
+  wavetablePosition = Math.max(0, Math.min(100, pos))
+  // Update discrete waveform to nearest
+  if (pos <= 16) currentWaveform = 'sine'
+  else if (pos <= 50) currentWaveform = 'triangle'
+  else if (pos <= 83) currentWaveform = 'square'
+  else currentWaveform = 'sawtooth'
+}
+
+/**
+ * Get wavetable position
+ */
+export function getWavetablePosition(): number {
+  return wavetablePosition
+}
+
+/**
+ * Get waveforms and blend for current position
+ * Returns [waveA, waveB, blendAmount] where blend 0 = all A, 1 = all B
+ */
+function getWavetableBlend(): [OscillatorType, OscillatorType, number] {
+  const pos = wavetablePosition
+  
+  // Check for exact positions first (no blending needed)
+  for (let i = 0; i < WAVETABLE_POSITIONS.length; i++) {
+    if (pos === WAVETABLE_POSITIONS[i]) {
+      const wave = WAVETABLE_ORDER[i]!
+      return [wave, wave, 0]
+    }
+  }
+  
+  // Find which segment we're in for blending
+  for (let i = 0; i < WAVETABLE_POSITIONS.length - 1; i++) {
+    const startPos = WAVETABLE_POSITIONS[i]!
+    const endPos = WAVETABLE_POSITIONS[i + 1]!
+    
+    if (pos > startPos && pos < endPos) {
+      const blend = (pos - startPos) / (endPos - startPos)
+      return [WAVETABLE_ORDER[i]!, WAVETABLE_ORDER[i + 1]!, blend]
+    }
+  }
+  
+  // At or past end
+  return ['sawtooth', 'sawtooth', 0]
+}
 
 /**
  * Play a note
@@ -59,14 +135,39 @@ export function playNote(params: Partial<VoiceParams> = {}): void {
       setTimeout(() => {
         oldest.osc.stop()
         oldest.osc.disconnect()
+        if (oldest.osc2) {
+          oldest.osc2.stop()
+          oldest.osc2.disconnect()
+        }
       }, 200)
     }
   }
 
-  // Create voice chain: osc -> filter -> gain -> panner -> output
+  // Get wavetable blend
+  const [waveA, waveB, blend] = getWavetableBlend()
+  const useBlend = blend > 0.01 && blend < 0.99
+
+  // Create voice chain: osc(s) -> filter -> gain -> panner -> output
   const osc = ctx.createOscillator()
-  osc.type = 'triangle'
+  osc.type = waveA
   osc.frequency.value = p.frequency
+
+  // Second oscillator for morphing
+  let osc2: OscillatorNode | undefined
+  let oscMixA: GainNode | undefined
+  let oscMixB: GainNode | undefined
+  
+  if (useBlend) {
+    osc2 = ctx.createOscillator()
+    osc2.type = waveB
+    osc2.frequency.value = p.frequency
+    
+    // Crossfade gains (equal power crossfade)
+    oscMixA = ctx.createGain()
+    oscMixB = ctx.createGain()
+    oscMixA.gain.value = Math.cos(blend * Math.PI / 2)
+    oscMixB.gain.value = Math.sin(blend * Math.PI / 2)
+  }
 
   const filter = ctx.createBiquadFilter()
   filter.type = 'lowpass'
@@ -80,7 +181,14 @@ export function playNote(params: Partial<VoiceParams> = {}): void {
   panner.pan.value = p.pan
 
   // Connect chain
-  osc.connect(filter)
+  if (useBlend && osc2 && oscMixA && oscMixB) {
+    osc.connect(oscMixA)
+    osc2.connect(oscMixB)
+    oscMixA.connect(filter)
+    oscMixB.connect(filter)
+  } else {
+    osc.connect(filter)
+  }
   filter.connect(gain)
   gain.connect(panner)
   
@@ -112,11 +220,13 @@ export function playNote(params: Partial<VoiceParams> = {}): void {
   gain.gain.linearRampToValueAtTime(peakGain, now + p.attack)
   gain.gain.setTargetAtTime(peakGain * 0.7, now + p.attack, p.release * 0.3)
 
-  // Start oscillator
+  // Start oscillator(s)
   osc.start(now)
+  if (osc2) osc2.start(now)
 
   const voice: Voice = {
     osc,
+    osc2,
     filter,
     gain,
     panner,
@@ -150,6 +260,10 @@ function releaseVoice(voice: Voice, releaseTime: number): void {
   setTimeout(() => {
     voice.osc.stop()
     voice.osc.disconnect()
+    if (voice.osc2) {
+      voice.osc2.stop()
+      voice.osc2.disconnect()
+    }
     const idx = voices.indexOf(voice)
     if (idx >= 0) voices.splice(idx, 1)
   }, releaseTime * 1500)
@@ -176,6 +290,10 @@ export function stopAllVoices(): void {
     setTimeout(() => {
       voice.osc.stop()
       voice.osc.disconnect()
+      if (voice.osc2) {
+        voice.osc2.stop()
+        voice.osc2.disconnect()
+      }
     }, 300)
   }
   voices.length = 0

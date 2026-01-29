@@ -19,8 +19,8 @@ const defaultConfig: EvolutionConfig = {
   enabled: true,
   moodShiftInterval: 180,        // 3 minutes
   densityShiftInterval: 60,      // 1 minute
-  quietMomentChance: 0.08,       // reduced from 0.15
-  quietMomentDuration: 5         // shorter quiet moments
+  quietMomentChance: 0.03,       // very rare quiet moments
+  quietMomentDuration: 3         // very short quiet moments
 }
 
 let config = { ...defaultConfig }
@@ -31,9 +31,9 @@ let inQuietMoment = false
 let quietMomentEnd = 0
 
 // Target values for smooth transitions
-let targetNoteProbability = 0.4
+let targetNoteProbability = 0.6
 let targetWindStrength = 0.3
-let currentNoteProbability = 0.4
+let currentNoteProbability = 0.6
 let currentWindStrength = 0.3
 let windUserOverride = false
 
@@ -106,8 +106,8 @@ function maybeShiftMood(): void {
 function shiftDensity(): void {
   // Random walk for note probability
   const musicConfig = getMusicConfig()
-  const probDelta = randomRange(-0.08, 0.1)  // bias slightly upward
-  targetNoteProbability = Math.max(0.2, Math.min(0.5, musicConfig.noteProbability + probDelta))
+  const probDelta = randomRange(-0.05, 0.08)  // bias upward
+  targetNoteProbability = Math.max(0.4, Math.min(0.7, musicConfig.noteProbability + probDelta))
 
   // Random walk for wind
   const windConfig = getWindConfig()
@@ -129,8 +129,8 @@ function startQuietMoment(): void {
   inQuietMoment = true
   quietMomentEnd = elapsedTime + config.quietMomentDuration
 
-  // Reduce note probability (but keep some activity)
-  targetNoteProbability = 0.15
+  // Slightly reduce activity (but stay audible)
+  targetNoteProbability = 0.35
   
   // Calm the wind
   targetWindStrength = 0.15
@@ -143,7 +143,7 @@ function endQuietMoment(): void {
   inQuietMoment = false
   
   // Restore to active values
-  targetNoteProbability = randomRange(0.3, 0.45)
+  targetNoteProbability = randomRange(0.5, 0.65)
   targetWindStrength = randomRange(0.25, 0.4)
 }
 
@@ -176,9 +176,9 @@ export function resetEvolution(): void {
   lastMoodShift = 0
   lastDensityShift = 0
   inQuietMoment = false
-  targetNoteProbability = 0.4
+  targetNoteProbability = 0.6
   targetWindStrength = 0.3
-  currentNoteProbability = 0.4
+  currentNoteProbability = 0.6
   currentWindStrength = 0.3
   windUserOverride = false
 }

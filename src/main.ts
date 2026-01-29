@@ -5,9 +5,11 @@ import { reseedNoise, prefersReducedMotion } from './utils'
 import { initAudio, resumeAudio, isAudioReady } from './audio/engine'
 import { triggerNote } from './audio/music'
 import { stopAllVoices } from './audio/voice'
+import { startDrones, stopDrones } from './audio/drone'
 import { updateEvolution, setDensityCallback, resetEvolution, setWindUserOverride } from './evolution'
 import { renderFlakes, toggleRenderMode } from './renderer'
 import { initControls, toggleTheme, syncRenderModeUI } from './controls'
+import { renderScene } from './scene'
 
 // state
 let isPlaying = false
@@ -87,6 +89,9 @@ function render(time: number) {
   const flakes = snowflakes.getActiveFlakes()
   renderFlakes(ctx, flakes)
 
+  // render scene (ground/landscape)
+  renderScene(ctx, window.innerWidth, window.innerHeight)
+
   // process audio triggers
   processAudioTriggers(flakes)
 
@@ -108,6 +113,7 @@ async function start() {
   isPlaying = true
   lastTime = 0
   animationId = requestAnimationFrame(render)
+  startDrones()
   updatePlayButton()
 }
 
@@ -118,6 +124,7 @@ function stop() {
     animationId = null
   }
   stopAllVoices()
+  stopDrones()
   updatePlayButton()
 }
 
@@ -139,11 +146,11 @@ function reseed() {
 function updatePlayButton() {
   // Pixel art style icons
   startBtn.innerHTML = isPlaying
-    ? `<svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" style="image-rendering: pixelated">
+    ? `<svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor" style="image-rendering: pixelated">
         <rect x="3" y="2" width="4" height="12" />
         <rect x="9" y="2" width="4" height="12" />
       </svg>`
-    : `<svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" style="image-rendering: pixelated">
+    : `<svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor" style="image-rendering: pixelated">
         <polygon points="4,2 4,14 13,8" />
       </svg>`
   startBtn.classList.toggle('playing', isPlaying)

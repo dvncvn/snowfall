@@ -7,6 +7,9 @@ import { setWindConfig } from './wind'
 import { setMusicConfig, type ScaleName } from './audio/music'
 import { setRenderMode, getRenderMode, type RenderMode } from './renderer'
 import { setDelayTime, setDelayFeedback, setDelayMix } from './audio/engine'
+import { setWavetablePosition } from './audio/voice'
+import { setScene, type SceneType } from './scene'
+import { setDroneEnabled } from './audio/drone'
 
 // Theme management
 let currentTheme: 'dark' | 'light' = 'dark'
@@ -55,6 +58,46 @@ export function initControls(snowflakes: SnowflakeSystem): void {
   renderSelect.addEventListener('change', () => {
     const value = renderSelect.value as RenderMode
     setRenderMode(value)
+  })
+
+  // Scene select
+  const sceneSelect = document.getElementById('scene-select') as HTMLSelectElement
+  sceneSelect.addEventListener('change', () => {
+    const value = sceneSelect.value as SceneType
+    setScene(value)
+  })
+
+  // Wavetable slider
+  const wavetableSlider = document.getElementById('wavetable-slider') as HTMLInputElement
+  const updateWavetable = () => {
+    const value = parseInt(wavetableSlider.value, 10)
+    setWavetablePosition(value)
+  }
+  wavetableSlider.addEventListener('input', updateWavetable)
+  wavetableSlider.addEventListener('change', updateWavetable)
+
+  const attackSlider = document.getElementById('attack-slider') as HTMLInputElement
+  attackSlider.addEventListener('input', () => {
+    const value = parseInt(attackSlider.value, 10) / 100
+    setMusicConfig({ baseAttack: value * 0.5 })  // 0-0.5 seconds
+  })
+
+  const releaseSlider = document.getElementById('release-slider') as HTMLInputElement
+  releaseSlider.addEventListener('input', () => {
+    const value = parseInt(releaseSlider.value, 10) / 100
+    setMusicConfig({ baseRelease: value * 4 })  // 0-4 seconds
+  })
+
+  const reverbSlider = document.getElementById('reverb-slider') as HTMLInputElement
+  reverbSlider.addEventListener('input', () => {
+    const value = parseInt(reverbSlider.value, 10) / 100
+    setMusicConfig({ reverbAmount: value })
+  })
+
+  // Drone toggle
+  const droneToggle = document.getElementById('drone-toggle') as HTMLInputElement
+  droneToggle.addEventListener('change', () => {
+    setDroneEnabled(droneToggle.checked)
   })
 
   // Delay controls

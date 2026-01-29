@@ -4,9 +4,9 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>snowfall</title>
-    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
-    <link href="https://cdn.jsdelivr.net/npm/geist@1.3.1/dist/fonts/geist-sans/style.min.css" rel="stylesheet" />
-    <link href="https://cdn.jsdelivr.net/npm/geist@1.3.1/dist/fonts/geist-mono/style.min.css" rel="stylesheet" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="/src/styles/main.css" />
   </head>
   <body>
@@ -51,6 +51,52 @@
             <option value="pixel" selected>pixel</option>
           </select>
         </div>
+        
+        <div class="control-group">
+          <label for="scene-select">scene</label>
+          <select id="scene-select">
+            <option value="none" selected>none</option>
+            <option value="hills">hills</option>
+            <option value="city">city</option>
+            <option value="forest">forest</option>
+          </select>
+        </div>
+
+        <div class="control-divider"></div>
+        <div class="control-label">synth</div>
+
+        <div class="control-group wavetable-group">
+          <label for="wavetable-slider">wave</label>
+          <input type="range" id="wavetable-slider" min="0" max="100" value="33">
+          <div class="wavetable-labels">
+            <span>sin</span>
+            <span>tri</span>
+            <span>sq</span>
+            <span>saw</span>
+          </div>
+        </div>
+        
+        <div class="control-group">
+          <label for="attack-slider">attack</label>
+          <input type="range" id="attack-slider" min="1" max="100" value="8" />
+        </div>
+        
+        <div class="control-group">
+          <label for="release-slider">release</label>
+          <input type="range" id="release-slider" min="10" max="100" value="50" />
+        </div>
+        
+        <div class="control-group">
+          <label for="reverb-slider">reverb</label>
+          <input type="range" id="reverb-slider" min="0" max="100" value="60" />
+        </div>
+
+        <div class="control-group checkbox-group">
+          <label class="checkbox-label">
+            <input type="checkbox" id="drone-toggle" checked />
+            <span>drone</span>
+          </label>
+        </div>
 
         <div class="control-divider"></div>
         <div class="control-label">delay</div>
@@ -86,7 +132,7 @@
     </aside>
 
     <button id="start-btn" class="start-btn" aria-label="Start">
-      <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" style="image-rendering: pixelated">
+      <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor" style="image-rendering: pixelated">
         <polygon points="4,2 4,14 13,8" />
       </svg>
     </button>

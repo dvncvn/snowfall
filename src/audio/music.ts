@@ -33,7 +33,7 @@ const defaultConfig: MusicConfig = {
   rootNote: 60,
   minOctave: -1,
   maxOctave: 2,
-  noteProbability: 0.4,  // increased from 0.3
+  noteProbability: 0.6,  // increased for more activity
   baseAttack: 0.08,
   baseRelease: 2,
   reverbAmount: 0.6
@@ -42,7 +42,7 @@ const defaultConfig: MusicConfig = {
 let config = { ...defaultConfig }
 
 // Rate limiting for performance
-const NOTE_RATE_LIMIT = 100 // min ms between notes
+const NOTE_RATE_LIMIT = 60 // min ms between notes (faster)
 let lastNoteTime = 0
 
 /**
