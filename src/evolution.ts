@@ -3,7 +3,7 @@
  * Creates slow parameter drift, mood shifts, and quiet moments
  */
 
-import { setMusicConfig, getMusicConfig, getScaleNames, type ScaleName } from './audio/music'
+import { setMusicConfig, getMusicConfig } from './audio/music'
 import { setWindConfig, getWindConfig } from './wind'
 import { lerp, randomRange } from './utils'
 
@@ -77,24 +77,10 @@ export function updateEvolution(delta: number): void {
 }
 
 /**
- * Possibly change the musical scale
+ * Possibly trigger a quiet moment (no longer changes scale)
  */
 function maybeShiftMood(): void {
-  // 50% chance to actually shift
-  if (Math.random() > 0.5) return
-
-  const scales = getScaleNames()
-  const currentScale = getMusicConfig().scale
-  
-  // Pick a different scale
-  let newScale: ScaleName
-  do {
-    newScale = scales[Math.floor(Math.random() * scales.length)]!
-  } while (newScale === currentScale && scales.length > 1)
-
-  setMusicConfig({ scale: newScale })
-
-  // Occasionally trigger a quiet moment with mood shift
+  // Occasionally trigger a quiet moment
   if (Math.random() < config.quietMomentChance) {
     startQuietMoment()
   }
