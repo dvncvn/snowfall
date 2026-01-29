@@ -7,7 +7,7 @@ import { triggerNote, triggerTwinkle } from './audio/music'
 import { stopAllVoices } from './audio/voice'
 import { startDrones, stopDrones } from './audio/drone'
 import { updateEvolution, setDensityCallback, resetEvolution, setWindUserOverride } from './evolution'
-import { renderFlakes } from './renderer'
+import { renderFlakes, applyDither } from './renderer'
 import { initControls, toggleTheme } from './controls'
 import { renderScene } from './scene'
 
@@ -38,6 +38,96 @@ setDensityCallback((density) => {
 
 // track flakes that have triggered notes
 const triggeredFlakes = new WeakSet<Snowflake>()
+
+// Ripple effect system
+interface Ripple {
+  x: number
+  y: number
+  radius: number
+  maxRadius: number
+  opacity: number
+}
+
+const ripples: Ripple[] = []
+
+function addRipple(x: number, y: number) {
+  // Add multiple staggered ripples
+  const baseMax = 50 + Math.random() * 30
+  ripples.push({ x, y, radius: 4, maxRadius: baseMax, opacity: 0.9 })
+  
+  setTimeout(() => {
+    ripples.push({ x, y, radius: 4, maxRadius: baseMax + 20, opacity: 0.7 })
+  }, 80)
+  
+  setTimeout(() => {
+    ripples.push({ x, y, radius: 4, maxRadius: baseMax + 40, opacity: 0.5 })
+  }, 160)
+}
+
+function updateRipples(delta: number) {
+  for (let i = ripples.length - 1; i >= 0; i--) {
+    const ripple = ripples[i]!
+    ripple.radius += delta * 70  // expansion speed
+    ripple.opacity *= 0.99  // gradual fade
+    
+    if (ripple.radius >= ripple.maxRadius || ripple.opacity < 0.05) {
+      ripples.splice(i, 1)
+    }
+  }
+}
+
+// Draw a pixelated circle using midpoint algorithm
+function drawPixelCircle(ctx: CanvasRenderingContext2D, cx: number, cy: number, radius: number) {
+  const r = Math.floor(radius)
+  if (r < 2) return
+  
+  const pixelSize = 2
+  const points: [number, number][] = []
+  
+  // Midpoint circle algorithm
+  let x = r
+  let y = 0
+  let err = 1 - r
+  
+  while (x >= y) {
+    // 8 octants
+    points.push([cx + x, cy + y])
+    points.push([cx + y, cy + x])
+    points.push([cx - y, cy + x])
+    points.push([cx - x, cy + y])
+    points.push([cx - x, cy - y])
+    points.push([cx - y, cy - x])
+    points.push([cx + y, cy - x])
+    points.push([cx + x, cy - y])
+    
+    y++
+    if (err < 0) {
+      err += 2 * y + 1
+    } else {
+      x--
+      err += 2 * (y - x) + 1
+    }
+  }
+  
+  // Draw pixels
+  for (const [px, py] of points) {
+    const snapX = Math.floor(px / pixelSize) * pixelSize
+    const snapY = Math.floor(py / pixelSize) * pixelSize
+    ctx.fillRect(snapX, snapY, pixelSize, pixelSize)
+  }
+}
+
+function renderRipples(ctx: CanvasRenderingContext2D) {
+  const isLightMode = document.documentElement.getAttribute('data-theme') === 'light'
+  ctx.fillStyle = isLightMode ? '#2a2a34' : '#ffffff'
+  
+  for (const ripple of ripples) {
+    ctx.globalAlpha = ripple.opacity * 0.7
+    drawPixelCircle(ctx, ripple.x, ripple.y, ripple.radius)
+  }
+  
+  ctx.globalAlpha = 1
+}
 
 // resize handler
 function resize() {
@@ -80,6 +170,7 @@ function render(time: number) {
   updateWind(delta)
   updateEvolution(delta)
   snowflakes.update(delta)
+  updateRipples(delta)
 
   // clear canvas
   ctx.fillStyle = getComputedStyle(document.documentElement)
@@ -91,8 +182,14 @@ function render(time: number) {
   const flakes = snowflakes.getActiveFlakes()
   renderFlakes(ctx, flakes)
 
+  // render ripples
+  renderRipples(ctx)
+
   // render scene (ground/landscape)
   renderScene(ctx, window.innerWidth, window.innerHeight)
+
+  // apply dither effect
+  applyDither(ctx, canvas.width, canvas.height)
 
   // process audio triggers
   processAudioTriggers(flakes)
@@ -174,13 +271,19 @@ function toggleSidebar() {
 // event listeners
 startBtn.addEventListener('click', toggle)
 
-// Canvas click for twinkle sounds
+// Canvas click for twinkle sounds and ripples
 canvas.addEventListener('click', (e) => {
-  if (!isPlaying || !isAudioReady()) return
+  if (!isPlaying) return
   
-  const x = e.clientX / window.innerWidth
-  const y = e.clientY / window.innerHeight
-  triggerTwinkle(x, y)
+  // Add visual ripple
+  addRipple(e.clientX, e.clientY)
+  
+  // Trigger audio if ready
+  if (isAudioReady()) {
+    const x = e.clientX / window.innerWidth
+    const y = e.clientY / window.innerHeight
+    triggerTwinkle(x, y)
+  }
 })
 
 window.addEventListener('resize', resize)
@@ -231,19 +334,17 @@ requestAnimationFrame(() => {
   ctx.fillRect(0, 0, canvas.width, canvas.height)
 })
 
-// Intro sequence
-function skipIntro(withAudio = false) {
+// Intro sequence - requires user gesture to start (ensures audio works)
+function skipIntro() {
   if (introComplete) return
   introComplete = true
   
   intro.classList.add('fade-out')
   
-  // Start visuals after fade begins
+  // Start visuals and audio after fade begins
   setTimeout(() => {
     startVisuals()
-    if (withAudio) {
-      startAudio()
-    }
+    startAudio()
     updatePlayButton()
   }, 500)
   
@@ -253,16 +354,11 @@ function skipIntro(withAudio = false) {
   }, 1500)
 }
 
-// Auto-advance intro after delay (visuals only, no audio)
-setTimeout(() => {
-  skipIntro(false)
-}, 4500)
-
-// Allow click/key to skip intro early (with audio since it's a user gesture)
-intro.addEventListener('click', () => skipIntro(true))
+// Click or key to start (user gesture ensures audio works)
+intro.addEventListener('click', skipIntro)
 document.addEventListener('keydown', (e) => {
   if (!introComplete && (e.key === ' ' || e.key === 'Enter')) {
     e.preventDefault()
-    skipIntro(true)
+    skipIntro()
   }
 })

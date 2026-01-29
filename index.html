@@ -45,6 +45,16 @@
         </div>
         
         <div class="control-group">
+          <label for="dither-select">dither</label>
+          <select id="dither-select">
+            <option value="0">none</option>
+            <option value="4" selected>4px</option>
+            <option value="8">8px</option>
+            <option value="16">16px</option>
+          </select>
+        </div>
+        
+        <div class="control-group">
           <label for="scale-select">mood</label>
           <select id="scale-select">
             <option value="pentatonic">pentatonic</option>
@@ -157,7 +167,7 @@
         
         <div class="control-group">
           <label for="crackle-level">crackle</label>
-          <input type="range" id="crackle-level" min="0" max="100" value="30" />
+          <input type="range" id="crackle-level" min="0" max="100" value="50" />
         </div>
         
         <div class="control-row">

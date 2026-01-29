@@ -241,3 +241,113 @@ export function renderFlakes(
   
   ctx.globalAlpha = 1
 }
+
+// Dither settings
+let ditherSize = 4  // 0 = off, 4, 8, or 16
+
+export function setDitherSize(size: number): void {
+  ditherSize = size
+}
+
+export function getDitherSize(): number {
+  return ditherSize
+}
+
+// 4x4 Bayer matrix (values 0-15, normalized to 0-1)
+const BAYER_4 = [
+  [ 0,  8,  2, 10],
+  [12,  4, 14,  6],
+  [ 3, 11,  1,  9],
+  [15,  7, 13,  5]
+].map(row => row.map(v => v / 16))
+
+// 8x8 Bayer matrix
+const BAYER_8 = [
+  [ 0, 32,  8, 40,  2, 34, 10, 42],
+  [48, 16, 56, 24, 50, 18, 58, 26],
+  [12, 44,  4, 36, 14, 46,  6, 38],
+  [60, 28, 52, 20, 62, 30, 54, 22],
+  [ 3, 35, 11, 43,  1, 33,  9, 41],
+  [51, 19, 59, 27, 49, 17, 57, 25],
+  [15, 47,  7, 39, 13, 45,  5, 37],
+  [63, 31, 55, 23, 61, 29, 53, 21]
+].map(row => row.map(v => v / 64))
+
+/**
+ * Apply ordered dither effect to the canvas
+ */
+export function applyDither(ctx: CanvasRenderingContext2D, width: number, height: number): void {
+  if (ditherSize === 0) return
+  
+  const imageData = ctx.getImageData(0, 0, width, height)
+  const data = imageData.data
+  
+  const matrix = ditherSize <= 4 ? BAYER_4 : BAYER_8
+  const matrixSize = ditherSize <= 4 ? 4 : 8
+  const pixelScale = ditherSize  // Size of each dither "pixel"
+  
+  const isLightMode = document.documentElement.getAttribute('data-theme') === 'light'
+  const bgColor = isLightMode ? { r: 245, g: 245, b: 247 } : { r: 10, g: 10, b: 12 }
+  const fgColor = isLightMode ? { r: 42, g: 42, b: 52 } : { r: 255, g: 255, b: 255 }
+  
+  // Process in blocks
+  for (let by = 0; by < height; by += pixelScale) {
+    for (let bx = 0; bx < width; bx += pixelScale) {
+      // Sample center of block
+      const sx = Math.min(bx + Math.floor(pixelScale / 2), width - 1)
+      const sy = Math.min(by + Math.floor(pixelScale / 2), height - 1)
+      const si = (sy * width + sx) * 4
+      
+      // Get luminance (simple average)
+      const r = data[si]!
+      const g = data[si + 1]!
+      const b = data[si + 2]!
+      
+      // Calculate how "foreground" this pixel is (0 = bg, 1 = fg)
+      let intensity: number
+      if (isLightMode) {
+        // In light mode, darker = more foreground
+        intensity = 1 - (r + g + b) / (3 * 255)
+      } else {
+        // In dark mode, brighter = more foreground
+        intensity = (r + g + b) / (3 * 255)
+      }
+      
+      // Skip dithering for near-background areas (keeps background clean)
+      const minIntensity = 0.05
+      if (intensity < minIntensity) {
+        // Fill with background color
+        for (let py = by; py < Math.min(by + pixelScale, height); py++) {
+          for (let px = bx; px < Math.min(bx + pixelScale, width); px++) {
+            const i = (py * width + px) * 4
+            data[i] = bgColor.r
+            data[i + 1] = bgColor.g
+            data[i + 2] = bgColor.b
+          }
+        }
+        continue
+      }
+      
+      // Get threshold from Bayer matrix
+      const mx = Math.floor(bx / pixelScale) % matrixSize
+      const my = Math.floor(by / pixelScale) % matrixSize
+      const threshold = matrix[my]![mx]!
+      
+      // Determine if this block should be fg or bg (bias toward foreground)
+      const useFg = intensity > threshold * 0.7
+      const color = useFg ? fgColor : bgColor
+      
+      // Fill the block
+      for (let py = by; py < Math.min(by + pixelScale, height); py++) {
+        for (let px = bx; px < Math.min(bx + pixelScale, width); px++) {
+          const i = (py * width + px) * 4
+          data[i] = color.r
+          data[i + 1] = color.g
+          data[i + 2] = color.b
+        }
+      }
+    }
+  }
+  
+  ctx.putImageData(imageData, 0, 0)
+}

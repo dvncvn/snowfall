@@ -14,8 +14,8 @@
   --fg: #e8e8ec;
   --fg-muted: #6b6b76;
   --accent: #4a4a5a;
-  --surface: #14141a;
-  --border: #2a2a34;
+  --surface: #101012;
+  --border: #222224;
   
   /* typography */
   --font-sans: 'Silkscreen', cursive;
@@ -144,14 +144,14 @@ body {
   margin-bottom: 4px;
 }
 
-/* range sliders */
+/* range sliders - pixel art style */
 input[type="range"] {
   -webkit-appearance: none;
   appearance: none;
   width: 100%;
   height: 4px;
   background: var(--border);
-  border-radius: 2px;
+  border-radius: 0;
   outline: none;
   cursor: pointer;
 }
@@ -159,25 +159,22 @@ input[type="range"] {
 input[type="range"]::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
-  width: 14px;
-  height: 14px;
+  width: 12px;
+  height: 12px;
   background: var(--fg);
-  border-radius: 50%;
+  border-radius: 0;
   cursor: pointer;
-  transition: transform var(--transition-fast);
-}
-
-input[type="range"]::-webkit-slider-thumb:hover {
-  transform: scale(1.2);
+  box-shadow: 2px 2px 0 var(--border);
 }
 
 input[type="range"]::-moz-range-thumb {
-  width: 14px;
-  height: 14px;
+  width: 12px;
+  height: 12px;
   background: var(--fg);
-  border-radius: 50%;
+  border-radius: 0;
   border: none;
   cursor: pointer;
+  box-shadow: 2px 2px 0 var(--border);
 }
 
 /* wavetable control */
@@ -369,7 +366,7 @@ select:focus {
   text-align: center;
   opacity: 0;
   transform: translateY(20px);
-  animation: intro-fade-in 2s cubic-bezier(0.4, 0, 0.2, 1) 0.5s forwards;
+  animation: intro-fade-in 1.2s cubic-bezier(0.4, 0, 0.2, 1) 0.3s forwards;
 }
 
 .intro-title {

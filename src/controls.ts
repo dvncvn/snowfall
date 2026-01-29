@@ -9,13 +9,14 @@ import { setDelayTime, setDelayFeedback, setDelayMix, setReverbMix, setWarbleRat
 import { setWavetablePosition } from './audio/voice'
 import { setScene, type SceneType } from './scene'
 import { setDroneEnabled } from './audio/drone'
+import { setDitherSize } from './renderer'
 
 // Theme management
 let currentTheme: 'dark' | 'light' = 'dark'
 
 // Base sizes for scaling
 const BASE_MIN_SIZE = 2
-const BASE_MAX_SIZE = 12
+const BASE_MAX_SIZE = 16
 
 export function initControls(snowflakes: SnowflakeSystem): void {
   // Density slider
@@ -43,6 +44,15 @@ export function initControls(snowflakes: SnowflakeSystem): void {
     // Mark wind as user-controlled
     window.dispatchEvent(new CustomEvent('snowfall:windOverride'))
   })
+
+  // Dither select
+  const ditherSelect = document.getElementById('dither-select') as HTMLSelectElement
+  ditherSelect.addEventListener('change', () => {
+    const size = parseInt(ditherSelect.value, 10)
+    setDitherSize(size)
+  })
+  // Initialize dither from default value
+  setDitherSize(parseInt(ditherSelect.value, 10))
 
   // Scale select
   const scaleSelect = document.getElementById('scale-select') as HTMLSelectElement

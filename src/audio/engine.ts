@@ -40,16 +40,16 @@ export async function initAudio(): Promise<void> {
   
   // Master gain
   masterGain = audioContext.createGain()
-  masterGain.gain.value = 0.7
+  masterGain.gain.value = 0.5
   masterGain.connect(audioContext.destination)
 
   // Dry path (will be routed through warble later)
   dryGain = audioContext.createGain()
-  dryGain.gain.value = 0.6
+  dryGain.gain.value = 0.4
 
   // Reverb path
   reverbGain = audioContext.createGain()
-  reverbGain.gain.value = 0.6  // Increased for more audible reverb
+  reverbGain.gain.value = 0.4
   
   // Create impulse response for reverb (longer, slower decay)
   reverbNode = audioContext.createConvolver()
@@ -66,7 +66,7 @@ export async function initAudio(): Promise<void> {
   delayFeedback.gain.value = 0.4
 
   delayGain = audioContext.createGain()
-  delayGain.gain.value = 0.3
+  delayGain.gain.value = 0.2
 
   // Filter in feedback loop for darker repeats
   delayFilter = audioContext.createBiquadFilter()
@@ -135,7 +135,7 @@ export async function initAudio(): Promise<void> {
   
   // Crackle (random pops)
   crackleGain = audioContext.createGain()
-  crackleGain.gain.value = 0.03
+  crackleGain.gain.value = 0.05
   crackleGain.connect(masterGain)
   
   // Start crackle generator

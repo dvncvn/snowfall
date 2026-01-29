@@ -33,13 +33,13 @@ export interface SnowfallConfig {
 const defaultConfig: SnowfallConfig = {
   density: 30,
   minSize: 2,
-  maxSize: 8,
-  minSpeed: 20,
-  maxSpeed: 60,
-  minLifespan: 8,
-  maxLifespan: 15,
-  fadeInDuration: 1,
-  fadeOutDuration: 2
+  maxSize: 16,
+  minSpeed: 12,
+  maxSpeed: 35,
+  minLifespan: 10,
+  maxLifespan: 18,
+  fadeInDuration: 1.5,
+  fadeOutDuration: 2.5
 }
 
 // Performance: max particles to prevent runaway memory
@@ -51,6 +51,7 @@ export class SnowflakeSystem {
   private width = 0
   private height = 0
   private spawnAccumulator = 0
+  private densityTime = 0  // for natural density variation
 
   constructor(config: Partial<SnowfallConfig> = {}) {
     this.config = { ...defaultConfig, ...config }
@@ -78,7 +79,7 @@ export class SnowflakeSystem {
     return {
       x: randomRange(0, this.width),
       y: randomRange(-50, -10),  // spawn above viewport
-      vx: randomRange(-5, 5),
+      vx: randomRange(-1, 1),    // gentle initial drift
       vy: adjustedSpeed,
       size,
       opacity: 0,
@@ -118,8 +119,14 @@ export class SnowflakeSystem {
   update(delta: number): void {
     const { fadeInDuration, fadeOutDuration } = this.config
     
-    // Spawn new flakes based on density
-    this.spawnAccumulator += delta * this.config.density
+    // Natural density variation using layered sine waves
+    this.densityTime += delta
+    const densityMod = 0.6 + 
+      0.25 * Math.sin(this.densityTime * 0.15) +   // slow wave
+      0.15 * Math.sin(this.densityTime * 0.4)      // faster wave
+    
+    // Spawn new flakes based on modulated density
+    this.spawnAccumulator += delta * this.config.density * densityMod
     while (this.spawnAccumulator >= 1) {
       this.spawn()
       this.spawnAccumulator -= 1
@@ -140,16 +147,16 @@ export class SnowflakeSystem {
       // Get wind at position
       const wind = getWind(flake.x, flake.y)
 
-      // Apply wind (stronger effect)
-      flake.vx += wind.x * flake.driftFactor * 150 * delta
-      flake.vy += wind.y * flake.driftFactor * 30 * delta
+      // Apply wind (very gentle effect for peaceful motion)
+      flake.vx += wind.x * flake.driftFactor * 30 * delta
+      flake.vy += wind.y * flake.driftFactor * 10 * delta
 
-      // Dampen horizontal velocity (less damping = more drift)
-      flake.vx *= 0.995
+      // Dampen horizontal velocity (stronger damping = smoother)
+      flake.vx *= 0.96
 
-      // Clamp velocities (higher max for more dramatic movement)
-      flake.vx = clamp(flake.vx, -80, 80)
-      flake.vy = clamp(flake.vy, 10, 100)
+      // Clamp velocities (low max for calm movement)
+      flake.vx = clamp(flake.vx, -20, 20)
+      flake.vy = clamp(flake.vy, 8, 60)
 
       // Update position
       flake.x += flake.vx * delta
