@@ -80,6 +80,11 @@ body {
   transform: translateX(-100%);
 }
 
+/* Shift drum sequencer when sidebar is open */
+.sidebar:not(.hidden) ~ .drum-sequencer {
+  left: calc(var(--sidebar-width) + 12px);
+}
+
 .sidebar-header {
   padding: 24px 20px 16px;
   border-bottom: 1px solid var(--border);
@@ -308,8 +313,9 @@ select:focus {
 
 /* start button - pixel aesthetic */
 .start-btn {
-  width: 32px;
-  height: 32px;
+  width: 36px;
+  height: 36px;
+  aspect-ratio: 1;
   border-radius: 0;
   border: 2px solid var(--fg);
   background: var(--bg);
@@ -442,6 +448,7 @@ select:focus {
   gap: 12px;
   align-items: stretch;
   pointer-events: none;
+  transition: left var(--transition-normal);
 }
 
 .drum-sequencer > * {
